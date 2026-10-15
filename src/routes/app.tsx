@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
-import { BarChart3, Bell, Columns3, FileText, LayoutDashboard, MessagesSquare, Radar, RotateCcw, Settings, Users, LogOut, FlaskConical } from "lucide-react";
+import { Bell, Columns3, FileText, LayoutDashboard, MessagesSquare, Radar, RotateCcw, Settings, Users, LogOut, FlaskConical } from "lucide-react";
 import { CrmProvider, useCrm } from "@/lib/crm/store";
 import { computeAlerts } from "@/lib/crm/metrics";
 import { Logo, LogoMark } from "@/components/brand/Logo";
@@ -99,4 +99,3 @@ function Shell() {
   );
 }
 
-export { BarChart3 };
