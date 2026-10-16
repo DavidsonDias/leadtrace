@@ -12,8 +12,13 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as AppIndexRouteImport } from './routes/app.index'
+import { Route as AppDealsRouteImport } from './routes/app.deals'
+import { Route as AppFollowupRouteImport } from './routes/app.followup'
 import { Route as AppInboxRouteImport } from './routes/app.inbox'
+import { Route as AppLeadsRouteImport } from './routes/app.leads'
+import { Route as AppOriginRouteImport } from './routes/app.origin'
 import { Route as AppPipelineRouteImport } from './routes/app.pipeline'
+import { Route as AppSettingsRouteImport } from './routes/app.settings'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -30,9 +35,29 @@ const AppIndexRoute = AppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppDealsRoute = AppDealsRouteImport.update({
+  id: '/deals',
+  path: '/deals',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppFollowupRoute = AppFollowupRouteImport.update({
+  id: '/followup',
+  path: '/followup',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppInboxRoute = AppInboxRouteImport.update({
   id: '/inbox',
   path: '/inbox',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppLeadsRoute = AppLeadsRouteImport.update({
+  id: '/leads',
+  path: '/leads',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOriginRoute = AppOriginRouteImport.update({
+  id: '/origin',
+  path: '/origin',
   getParentRoute: () => AppRoute,
 } as any)
 const AppPipelineRoute = AppPipelineRouteImport.update({
@@ -40,34 +65,84 @@ const AppPipelineRoute = AppPipelineRouteImport.update({
   path: '/pipeline',
   getParentRoute: () => AppRoute,
 } as any)
+const AppSettingsRoute = AppSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
+  '/app/deals': typeof AppDealsRoute
+  '/app/followup': typeof AppFollowupRoute
   '/app/inbox': typeof AppInboxRoute
+  '/app/leads': typeof AppLeadsRoute
+  '/app/origin': typeof AppOriginRoute
   '/app/pipeline': typeof AppPipelineRoute
+  '/app/settings': typeof AppSettingsRoute
   '/app/': typeof AppIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/app/deals': typeof AppDealsRoute
+  '/app/followup': typeof AppFollowupRoute
   '/app/inbox': typeof AppInboxRoute
+  '/app/leads': typeof AppLeadsRoute
+  '/app/origin': typeof AppOriginRoute
   '/app/pipeline': typeof AppPipelineRoute
+  '/app/settings': typeof AppSettingsRoute
   '/app': typeof AppIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
+  '/app/deals': typeof AppDealsRoute
+  '/app/followup': typeof AppFollowupRoute
   '/app/inbox': typeof AppInboxRoute
+  '/app/leads': typeof AppLeadsRoute
+  '/app/origin': typeof AppOriginRoute
   '/app/pipeline': typeof AppPipelineRoute
+  '/app/settings': typeof AppSettingsRoute
   '/app/': typeof AppIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/app' | '/app/inbox' | '/app/pipeline' | '/app/'
+  fullPaths:
+    | '/'
+    | '/app'
+    | '/app/deals'
+    | '/app/followup'
+    | '/app/inbox'
+    | '/app/leads'
+    | '/app/origin'
+    | '/app/pipeline'
+    | '/app/settings'
+    | '/app/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/app/inbox' | '/app/pipeline' | '/app'
-  id: '__root__' | '/' | '/app' | '/app/inbox' | '/app/pipeline' | '/app/'
+  to:
+    | '/'
+    | '/app/deals'
+    | '/app/followup'
+    | '/app/inbox'
+    | '/app/leads'
+    | '/app/origin'
+    | '/app/pipeline'
+    | '/app/settings'
+    | '/app'
+  id:
+    | '__root__'
+    | '/'
+    | '/app'
+    | '/app/deals'
+    | '/app/followup'
+    | '/app/inbox'
+    | '/app/leads'
+    | '/app/origin'
+    | '/app/pipeline'
+    | '/app/settings'
+    | '/app/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -98,11 +173,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/deals': {
+      id: '/app/deals'
+      path: '/deals'
+      fullPath: '/app/deals'
+      preLoaderRoute: typeof AppDealsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/followup': {
+      id: '/app/followup'
+      path: '/followup'
+      fullPath: '/app/followup'
+      preLoaderRoute: typeof AppFollowupRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/inbox': {
       id: '/app/inbox'
       path: '/inbox'
       fullPath: '/app/inbox'
       preLoaderRoute: typeof AppInboxRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/leads': {
+      id: '/app/leads'
+      path: '/leads'
+      fullPath: '/app/leads'
+      preLoaderRoute: typeof AppLeadsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/origin': {
+      id: '/app/origin'
+      path: '/origin'
+      fullPath: '/app/origin'
+      preLoaderRoute: typeof AppOriginRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/pipeline': {
@@ -112,18 +215,35 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPipelineRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/settings': {
+      id: '/app/settings'
+      path: '/settings'
+      fullPath: '/app/settings'
+      preLoaderRoute: typeof AppSettingsRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
 interface AppRouteChildren {
+  AppDealsRoute: typeof AppDealsRoute
+  AppFollowupRoute: typeof AppFollowupRoute
   AppInboxRoute: typeof AppInboxRoute
+  AppLeadsRoute: typeof AppLeadsRoute
+  AppOriginRoute: typeof AppOriginRoute
   AppPipelineRoute: typeof AppPipelineRoute
+  AppSettingsRoute: typeof AppSettingsRoute
   AppIndexRoute: typeof AppIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppDealsRoute: AppDealsRoute,
+  AppFollowupRoute: AppFollowupRoute,
   AppInboxRoute: AppInboxRoute,
+  AppLeadsRoute: AppLeadsRoute,
+  AppOriginRoute: AppOriginRoute,
   AppPipelineRoute: AppPipelineRoute,
+  AppSettingsRoute: AppSettingsRoute,
   AppIndexRoute: AppIndexRoute,
 }
 
