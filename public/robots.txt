@@ -1,6 +1,9 @@
 User-agent: *
 Allow: /
 Disallow: /app
+Disallow: /workspace
 Disallow: /login
 Disallow: /forgot-password
-Sitemap: /sitemap.xml
+Disallow: /reset-password
+Disallow: /auth
+Sitemap: https://leadtrace-two.vercel.app/sitemap.xml

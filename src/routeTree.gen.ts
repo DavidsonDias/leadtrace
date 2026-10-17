@@ -13,7 +13,9 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as WorkspaceRouteImport } from './routes/workspace'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AppDealsRouteImport } from './routes/app.deals'
 import { Route as AppFollowupRouteImport } from './routes/app.followup'
@@ -22,6 +24,9 @@ import { Route as AppLeadsRouteImport } from './routes/app.leads'
 import { Route as AppOriginRouteImport } from './routes/app.origin'
 import { Route as AppPipelineRouteImport } from './routes/app.pipeline'
 import { Route as AppSettingsRouteImport } from './routes/app.settings'
+import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
+import { Route as WorkspaceIndexRouteImport } from './routes/workspace.index'
+import { Route as WorkspaceModuleRouteImport } from './routes/workspace.$module'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -43,9 +48,19 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WorkspaceRoute = WorkspaceRouteImport.update({
+  id: '/workspace',
+  path: '/workspace',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppIndexRoute = AppIndexRouteImport.update({
@@ -88,13 +103,30 @@ const AppSettingsRoute = AppSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AppRoute,
 } as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/auth/callback',
+  path: '/auth/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WorkspaceIndexRoute = WorkspaceIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => WorkspaceRoute,
+} as any)
+const WorkspaceModuleRoute = WorkspaceModuleRouteImport.update({
+  id: '/$module',
+  path: '/$module',
+  getParentRoute: () => WorkspaceRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/workspace': typeof WorkspaceRouteWithChildren
   '/app/deals': typeof AppDealsRoute
   '/app/followup': typeof AppFollowupRoute
   '/app/inbox': typeof AppInboxRoute
@@ -102,12 +134,16 @@ export interface FileRoutesByFullPath {
   '/app/origin': typeof AppOriginRoute
   '/app/pipeline': typeof AppPipelineRoute
   '/app/settings': typeof AppSettingsRoute
+  '/auth/callback': typeof AuthCallbackRoute
+  '/workspace/$module': typeof WorkspaceModuleRoute
   '/app/': typeof AppIndexRoute
+  '/workspace/': typeof WorkspaceIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/app/deals': typeof AppDealsRoute
   '/app/followup': typeof AppFollowupRoute
@@ -116,7 +152,10 @@ export interface FileRoutesByTo {
   '/app/origin': typeof AppOriginRoute
   '/app/pipeline': typeof AppPipelineRoute
   '/app/settings': typeof AppSettingsRoute
+  '/auth/callback': typeof AuthCallbackRoute
+  '/workspace/$module': typeof WorkspaceModuleRoute
   '/app': typeof AppIndexRoute
+  '/workspace': typeof WorkspaceIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -124,7 +163,9 @@ export interface FileRoutesById {
   '/app': typeof AppRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/workspace': typeof WorkspaceRouteWithChildren
   '/app/deals': typeof AppDealsRoute
   '/app/followup': typeof AppFollowupRoute
   '/app/inbox': typeof AppInboxRoute
@@ -132,7 +173,10 @@ export interface FileRoutesById {
   '/app/origin': typeof AppOriginRoute
   '/app/pipeline': typeof AppPipelineRoute
   '/app/settings': typeof AppSettingsRoute
+  '/auth/callback': typeof AuthCallbackRoute
+  '/workspace/$module': typeof WorkspaceModuleRoute
   '/app/': typeof AppIndexRoute
+  '/workspace/': typeof WorkspaceIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -141,7 +185,9 @@ export interface FileRouteTypes {
     | '/app'
     | '/forgot-password'
     | '/login'
+    | '/reset-password'
     | '/sitemap.xml'
+    | '/workspace'
     | '/app/deals'
     | '/app/followup'
     | '/app/inbox'
@@ -149,12 +195,16 @@ export interface FileRouteTypes {
     | '/app/origin'
     | '/app/pipeline'
     | '/app/settings'
+    | '/auth/callback'
+    | '/workspace/$module'
     | '/app/'
+    | '/workspace/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/forgot-password'
     | '/login'
+    | '/reset-password'
     | '/sitemap.xml'
     | '/app/deals'
     | '/app/followup'
@@ -163,14 +213,19 @@ export interface FileRouteTypes {
     | '/app/origin'
     | '/app/pipeline'
     | '/app/settings'
+    | '/auth/callback'
+    | '/workspace/$module'
     | '/app'
+    | '/workspace'
   id:
     | '__root__'
     | '/'
     | '/app'
     | '/forgot-password'
     | '/login'
+    | '/reset-password'
     | '/sitemap.xml'
+    | '/workspace'
     | '/app/deals'
     | '/app/followup'
     | '/app/inbox'
@@ -178,7 +233,10 @@ export interface FileRouteTypes {
     | '/app/origin'
     | '/app/pipeline'
     | '/app/settings'
+    | '/auth/callback'
+    | '/workspace/$module'
     | '/app/'
+    | '/workspace/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -186,7 +244,10 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  WorkspaceRoute: typeof WorkspaceRouteWithChildren
+  AuthCallbackRoute: typeof AuthCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -219,11 +280,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sitemap.xml': {
       id: '/sitemap.xml'
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/workspace': {
+      id: '/workspace'
+      path: '/workspace'
+      fullPath: '/workspace'
+      preLoaderRoute: typeof WorkspaceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app/': {
@@ -282,6 +357,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSettingsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/auth/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/workspace/': {
+      id: '/workspace/'
+      path: '/'
+      fullPath: '/workspace/'
+      preLoaderRoute: typeof WorkspaceIndexRouteImport
+      parentRoute: typeof WorkspaceRoute
+    }
+    '/workspace/$module': {
+      id: '/workspace/$module'
+      path: '/$module'
+      fullPath: '/workspace/$module'
+      preLoaderRoute: typeof WorkspaceModuleRouteImport
+      parentRoute: typeof WorkspaceRoute
+    }
   }
 }
 
@@ -309,12 +405,29 @@ const AppRouteChildren: AppRouteChildren = {
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
+interface WorkspaceRouteChildren {
+  WorkspaceModuleRoute: typeof WorkspaceModuleRoute
+  WorkspaceIndexRoute: typeof WorkspaceIndexRoute
+}
+
+const WorkspaceRouteChildren: WorkspaceRouteChildren = {
+  WorkspaceModuleRoute: WorkspaceModuleRoute,
+  WorkspaceIndexRoute: WorkspaceIndexRoute,
+}
+
+const WorkspaceRouteWithChildren = WorkspaceRoute._addFileChildren(
+  WorkspaceRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  WorkspaceRoute: WorkspaceRouteWithChildren,
+  AuthCallbackRoute: AuthCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

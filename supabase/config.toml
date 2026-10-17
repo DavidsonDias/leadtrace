@@ -1,0 +1,6 @@
+project_id = "leadtrace"
+# These endpoints authenticate the Meta signature or a server-to-server key, not a browser JWT.
+[functions.whatsapp-webhook]
+verify_jwt = false
+[functions.capture-lead]
+verify_jwt = false

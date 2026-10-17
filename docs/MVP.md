@@ -1,102 +1,74 @@
-# LeadTrace CRM — estado do MVP
+# LeadTrace CRM — MVP
 
-Produto desenvolvido por SevenDevX. Organização piloto: Resende Torres Engenharia.
+Produto: LeadTrace CRM, by SevenDevX. Piloto: Resende Torres Engenharia. Slogan: “Track every lead. Grow every opportunity.”
 
 ## Executar
 
-Node.js 24 e npm. Na raiz do repositório:
+Node.js 24 e npm. npm/package-lock.json é a referência de dependências para desenvolvimento, CI e Vercel.
 
 ```sh
 npm ci --ignore-scripts
 npm run dev
 ```
 
-Abra a URL exibida pelo Vite (normalmente http://localhost:8080). Nenhuma credencial é necessária para a demonstração. Para validar:
+Abra a URL exibida pelo Vite. Nenhuma credencial é necessária para a demonstração.
 
 ```sh
 npm test
-npx tsc --noEmit
+npm run typecheck
 npm run build
-npm run preview
+npx playwright install chromium
+npm run test:e2e
 ```
-
-O repositório já utilizava React 19, TypeScript estrito, TanStack Start/Router, Vite, Tailwind 4, componentes Radix/shadcn, Zod e Recharts. A implementação preserva essa arquitetura e a sincronização com Lovable. O build atual gera um servidor Nitro com preset Cloudflare; publicação em Vercel ainda exige configuração e homologação próprias.
 
 ## Telas e fluxos
 
-- `/`: landing pública, identidade LeadTrace, demonstração visual, funcionalidades, benefícios, etapas e assinatura SevenDevX.
-- `/login` e `/forgot-password`: apresentação do acesso; contas reais e OAuth ainda não estão habilitados. A interface informa essa limitação.
-- `/app`: indicadores e gráficos derivados dos leads e propostas da demo.
-- `/app/inbox`: conversas fictícias associadas a leads, envio simulado, status e resposta simulada.
-- `/app/origin`: fontes, campanhas, evidências e confiança demonstrativas. Atribuição manual com justificativa no detalhe do lead.
-- `/app/pipeline`: arrastar cards ou usar seletor acessível; motivo obrigatório para desqualificar; propostas sincronizadas com avanço do funil.
-- `/app/leads`: cadastro, pesquisa, filtros, ordenação, paginação e CSV. Detalhe com edição de contato/empresa/observações, responsável, etapa, agenda, comentários e timeline.
-- `/app/deals`: valores, status, observações e próxima data de acompanhamento. A data também atualiza a atividade do lead.
-- `/app/followup`: alertas de propostas, atividades vencidas, registro de acompanhamento e resolução.
-- `/app/settings`: regras de alertas e restauração da demo. Usuários, papéis e integrações são referências demonstrativas, não administração real.
+| Tela                                                    | Funcionamento                                                                                                                                                             |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/`                                                     | Landing em português, branding, recursos, como funciona, benefícios, prévia derivada da base fictícia, metadados sociais, canonical, sitemap e assinatura SevenDevX.      |
+| `/login`                                                | E-mail/senha e Google OAuth reais quando configurados; acesso separado à demo. Sem configuração, o formulário real permanece indisponível.                                |
+| `/forgot-password`, `/auth/callback`, `/reset-password` | Recuperação, callback PKCE e redefinição via Supabase; mensagens honestas quando indisponíveis.                                                                           |
+| `/app`                                                  | Demonstração isolada com 36 leads fictícios persistidos neste navegador.                                                                                                  |
+| `/workspace`                                            | Plataforma com verificação de usuário, seleção de organização e persistência via banco/RLS quando configurados.                                                           |
+| Dashboard                                               | Indicadores, gráficos, atividades, alertas e acompanhamentos derivados da mesma base dos demais módulos.                                                                  |
+| Leads                                                   | Cadastro, pesquisa, filtros, ordenação, paginação e CSV. Detalhe com edição, responsável, origem, agenda, comentários e timeline.                                         |
+| Inbox                                                   | Três painéis, associação conversa/lead e status. Na demo, envio/resposta simulados; na plataforma, envio bloqueado até a integração oficial ser configurada e homologada. |
+| Origem                                                  | Filtros por canal, campanha, evidência, confiança e atribuição manual com justificativa/histórico.                                                                        |
+| Pipeline                                                | Drag-and-drop e seletor para teclado/celular. Motivo obrigatório para desqualificar. Avanços comerciais sincronizam propostas.                                            |
+| Propostas                                               | Valor, status, envio, observações e acompanhamento; agenda sincronizada nos dois sentidos com o lead.                                                                     |
+| Follow-up                                               | Alertas de 7/15/30 dias, atividade vencida, proposta aguardando resposta, registro de acompanhamento e resolução.                                                         |
+| Configurações                                           | Demo: regras e restauração. Plataforma: perfil, organização, regras e administração de papéis com proteção do último administrador.                                       |
 
-Todos os módulos estão acessíveis em navegação móvel. Há tema claro/escuro persistido e respeito à preferência de movimento reduzido.
+Todos os módulos são acessíveis no celular. Temas claro/escuro são persistidos; controles do tema aguardam a inicialização do navegador para não perder cliques durante a hidratação. Há estados vazios, erros, confirmações e preferência de movimento reduzido.
 
-## Persistência e regras
+## Arquitetura e dados
 
-`src/lib/crm/store.tsx` contém exclusivamente o estado demo, salvo sob `leadtrace.demo.v1` no localStorage. Dados fictícios persistem neste navegador, sem compartilhamento com outras pessoas/dispositivos. A demo não acessa dados de produção nem autentica usuários reais. Não use esse armazenamento para dados reais de clientes.
+React 19, TypeScript estrito, TanStack Start/Router, Vite, Tailwind 4, Radix/shadcn, Zod, Recharts e Supabase JS. A arquitetura existente da Lovable foi preservada e o histórico Git não foi reescrito.
 
-`storage.ts` valida o formato e as referências aos leads antes de restaurar uma sessão; armazenamento inválido volta à base fictícia. Falha ao salvar exibe aviso. Restaurar cancela respostas simuladas pendentes e fecha o detalhe aberto.
+As telas compartilhadas estão em `src/components/pages`. `src/lib/crm/context.ts` fornece o contrato; `store.tsx` mantém exclusivamente a demonstração em `leadtrace.demo.v1`; `backend/live-store.tsx` usa o repositório Supabase e nunca escreve no armazenamento demo.
 
-`metrics.ts` concentra filtros, indicadores e alertas. “Hoje” começa à meia-noite local, períodos personalizados incluem toda a data final e capturas futuras são excluídas. Alertas consideram o envio da proposta para não anunciar atraso anterior ao envio. Comentários e movimentações internas não alteram a data de último contato. Uma atividade pode estar vencida por horas, sem aguardar um dia inteiro.
+`metrics.ts` concentra filtros/indicadores/alertas. “Hoje” começa à meia-noite local; períodos personalizados incluem a data final; comentários internos não alteram o último contato; alertas de proposta consideram a data de envio. `transitions.ts` valida alterações demonstrativas de propostas; a produção usa a RPC transacional `crm_command`.
 
-`transitions.ts` centraliza a atualização de proposta: não aceita valores negativos/não finitos ou leads inexistentes, cria a data de envio quando necessária e sincroniza valor, etapa e acompanhamento. Recusa/expiração da proposta não desqualifica automaticamente o lead; o motivo de desqualificação é uma decisão explícita no pipeline.
+A migration em `supabase/migrations` cria 18 tabelas, índices, relações por organização, RLS, histórico, auditoria e ingestão deduplicada. As políticas foram exercitadas em Postgres local via PGlite. O banco remoto ainda precisa ser criado/configurado; não foi aplicado em projetos de outros sistemas. A modelagem e a ativação estão em [PRODUCTION.md](PRODUCTION.md).
 
-## PWA
+## PWA, SEO e governança
 
-Manifest e ícone vetorial, registro de service worker somente no build de produção, fallback offline e indicação de conectividade. O cache aceita apenas arquivos públicos de assets e ícones. HTML da aplicação, APIs, conversas e dados operacionais não entram no Cache Storage. A demo localStorage continua sendo armazenamento explícito separado desse cache.
+Manifest, ícones PNG 192/512 e Apple 180, service worker em produção, aviso de nova versão com ação de atualização, fallback offline e indicação de conectividade. O teste de navegador confirmou cache de arquivos públicos e exclusão de `/workspace` e requisições privadas. HTML operacional, APIs e conversas não entram no Cache Storage. O CRM não promete operação integral offline. Instalação em aparelhos Android/iOS ainda requer homologação.
 
-Atualizações do worker seguem o ciclo do navegador: uma nova versão aguarda o fechamento das abas antigas. Ainda pendem ícones PNG 192/512, validação de instalação em Android/iOS e testes de atualização em uma publicação HTTPS. Não declarar certificação PWA ou funcionamento integral do CRM offline.
+Landing com HTML semântico, title/description, canonical, Open Graph, Twitter Cards, imagem social e Schema.org. Rotas demo, operacionais e de autenticação usam noindex e são excluídas do robots. A URL pública estável observada é `https://leadtrace-two.vercel.app`; um domínio próprio continua opcional.
 
-## Estrutura atual e banco de produção
+Secrets não entram no frontend. Auth utiliza PKCE e `getUser`; permissões ficam nas memberships e no banco, não em metadados editáveis do usuário. A aplicação mantém assinatura e links da SevenDevX. Não há cobrança implementada nem serviços pagos provisionados.
 
-Ainda não há conexão Supabase, migrations ou banco de produção neste repositório. As entidades TypeScript existentes são leads, atribuição/histórico, conversas/mensagens, propostas, comentários, atividades, regras e resoluções de alertas.
+## Validação
 
-O modelo relacional previsto para a fase operacional é:
+Nesta entrega: 46 testes automatizados de regras, persistência, banco/RLS, auth e adaptadores; cinco testes de navegador para edição persistente, pipeline/proposta/desqualificação, navegação móvel/tema, mensagens simuladas e separação do acesso real. TypeScript, build e checagem dos adaptadores Deno também executados. A CI roda a suíte e os testes Playwright.
 
-| Área                  | Tabelas previstas                                   |
-| --------------------- | --------------------------------------------------- |
-| Organizações e acesso | organizations, profiles, organization_members       |
-| Comercial             | leads, pipeline_stages, pipeline_history, proposals |
-| Origem                | lead_sources, attribution_events                    |
-| Atendimento           | conversations, messages                             |
-| Operação              | activities, notes, notifications                    |
-| Administração         | integration_settings, audit_logs                    |
+## Próximas dependências de ativação
 
-Antes de receber dados reais: migrations com UUIDs/FKs/índices; `organization_id` nas entidades; relações compostas que impeçam referências entre organizações; RLS em todas as tabelas expostas; papéis em membership controlada no servidor; provisionamento seguro da primeira organização; auditoria sem copiar mensagens sensíveis; testes de isolamento com dois tenants. Tokens Meta devem permanecer em secrets do servidor, nunca no frontend ou em integration_settings legível pelo cliente.
+- Projeto Supabase dedicado, variáveis públicas, migrations e conta administrativa.
+- Provedor Google e e-mails de recuperação configurados/homologados com contas reais.
+- Credenciais Meta, número, webhook, templates e fila de envio antes de liberar saída na inbox operacional.
+- Backend do site conectado ao endpoint de captura com chave privada, consentimento e proteção contra abuso.
+- Homologação com duas organizações reais, celulares e revisão completa de acessibilidade/LGPD/retenção.
 
-## Integrações pendentes
-
-- Supabase Auth e PostgreSQL: projeto, configurações e persistência real separados da demo; login, logout, recuperação e redefinição reais.
-- Google OAuth: provedor configurado e URLs de retorno; nenhuma conexão atual.
-- Meta WhatsApp Cloud API: conta/número, templates, secrets, assinatura e idempotência de webhooks, recebimento/envio reais e janela de atendimento.
-- Site: formulário e links rastreáveis, captura first/last touch, UTMs/referrer/gclid e consentimento quando aplicável.
-- Google Ads: autorização, eventos e conversões; não conectado.
-- Domínio e hospedagem finais: canonical/URLs públicas e metadados sociais com domínio aprovado; homologação em HTTPS.
-
-Não há cobrança ou serviços pagos provisionados. Não é necessário crédito Lovable para desenvolver localmente com Git/npm.
-
-## Testes e roteiro de apresentação
-
-A suíte automatizada cobre regras de alertas (7/15/30 dias), filtros de origem/data, consistência de propostas, persistência ao remontar o app, mensagens simuladas, motivo de desqualificação, comentários e restauração. A CI executa testes, TypeScript e build em pull requests e na main.
-
-Roteiro: landing → demonstração → dashboard → abrir conversa simulada → mostrar evidência de origem → mover card → registrar comentário → enviar proposta pela troca de status → agendar acompanhamento → conferir alertas → filtrar Google Ads → abrir os mesmos módulos no celular.
-
-Critérios ainda não homologados: WCAG 2.2 AA completa, instalação PWA em aparelhos reais, integrações externas, RLS/multi-tenancy, banco de produção e deploy Vercel. O escopo entregue é a evolução do MVP demonstrativo; não representa conclusão das fases operacionais e SaaS do prompt mestre.
-
-## Validação desta entrega — 17/10/2026
-
-- Instalação limpa por `npm ci --ignore-scripts`: aprovada.
-- Vitest: 22 testes aprovados, em quatro arquivos.
-- TypeScript estrito: aprovado, sem erros.
-- Build de produção: aprovado.
-- ESLint dos arquivos TypeScript alterados: sem erros; um aviso de Fast Refresh no arquivo de provider/hook já compartilhado.
-- Chromium desktop: movimentação persistente de pipeline, proposta correspondente e desqualificação com motivo obrigatório, sem erros JavaScript.
-- Chromium desktop e viewport móvel 390 × 844: edição persistida após reload, tema claro e navegação para Origem, Propostas e Configurações; sem erros JavaScript.
-
-Esses resultados não equivalem à homologação das integrações de produção.
+Essas dependências são externas. Os adaptadores estão preparados e testados localmente, mas não são apresentados como integrações conectadas.

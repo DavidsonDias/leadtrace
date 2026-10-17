@@ -243,3 +243,8 @@
   --src-other: #526277;
   --src-unknown: #526277;
 }
+:root[data-theme="light"] {
+  --deep: #edf3f9;
+  --surface: #e3ebf5;
+  --mint: #087d6c;
+}

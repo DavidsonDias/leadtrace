@@ -52,7 +52,7 @@ const schema = z.object({
           dir: z.enum(["in", "out"]),
           text: z.string(),
           at: date,
-          status: z.enum(["sent", "delivered", "read", "received"]),
+          status: z.enum(["sent", "delivered", "read", "received", "failed"]),
         }),
       ),
     }),
