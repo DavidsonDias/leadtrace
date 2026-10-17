@@ -30,7 +30,7 @@ function Settings() {
           <dl className="space-y-2 text-sm"><div><dt className="text-xs text-muted-foreground">Nome</dt><dd>Resende Torres Engenharia</dd></div><div><dt className="text-xs text-muted-foreground">Site</dt><dd><a className="text-primary" href="https://www.resendetorres.com/" target="_blank" rel="noopener noreferrer">resendetorres.com</a></dd></div><div><dt className="text-xs text-muted-foreground">Plano</dt><dd>Piloto</dd></div></dl>
         </Panel>
         <Panel title="Usuários e permissões">
-          <ul className="space-y-1 text-sm">{OWNERS.map((o, i) => <li key={o} className="flex justify-between"><span>{o}</span><span className="text-xs text-muted-foreground">{ROLES[i].r}</span></li>)}</ul>
+          <ul className="space-y-1 text-sm">{OWNERS.map((o, i) => <li key={o} className="flex justify-between"><span>{o}</span><span className="text-xs text-muted-foreground">{ROLES[i]?.r}</span></li>)}</ul>
           <ul className="mt-3 space-y-1 border-t border-border pt-3 text-xs text-muted-foreground">{ROLES.map((x) => <li key={x.r}><b className="text-foreground">{x.r}:</b> {x.d}</li>)}</ul>
         </Panel>
         <Panel title="Alertas">
