@@ -8,13 +8,33 @@ const DAY = 86_400_000;
 
 function stateWithProposal(daysAgo: number): CrmState {
   const s = createSeed(NOW);
-  const lead = { ...s.leads[0]!, stage: "proposta_enviada" as const, lastInteraction: new Date(NOW - daysAgo * DAY).toISOString(), nextActivity: undefined };
-  return { ...s, leads: [lead], proposals: [{ id: "p1", leadId: lead.id, value: 1000, status: "enviada" as const, sentAt: lead.lastInteraction, notes: "" }] };
+  const lead = {
+    ...s.leads[0]!,
+    stage: "proposta_enviada" as const,
+    lastInteraction: new Date(NOW - daysAgo * DAY).toISOString(),
+    nextActivity: undefined,
+  };
+  return {
+    ...s,
+    leads: [lead],
+    proposals: [
+      {
+        id: "p1",
+        leadId: lead.id,
+        value: 1000,
+        status: "enviada" as const,
+        sentAt: lead.lastInteraction,
+        notes: "",
+      },
+    ],
+  };
 }
 
 describe("follow-up alerts", () => {
-  it("flags 7 days without reply", () => expect(computeAlerts(stateWithProposal(7), NOW)[0]?.kind).toBe("d7"));
-  it("flags 15 days without reply", () => expect(computeAlerts(stateWithProposal(15), NOW)[0]?.kind).toBe("d15"));
+  it("flags 7 days without reply", () =>
+    expect(computeAlerts(stateWithProposal(7), NOW)[0]?.kind).toBe("d7"));
+  it("flags 15 days without reply", () =>
+    expect(computeAlerts(stateWithProposal(15), NOW)[0]?.kind).toBe("d15"));
   it("flags 30 days without reply as critical", () => {
     const a = computeAlerts(stateWithProposal(30), NOW)[0]!;
     expect(a.kind).toBe("d30");
@@ -34,7 +54,8 @@ describe("demo data", () => {
     expect(n).toBeLessThanOrEqual(50);
   });
   it("only attributes AI origin with referrer evidence", () => {
-    for (const l of createSeed(NOW).leads.filter((x) => x.source === "ai")) expect(l.attribution.referrer).toBeTruthy();
+    for (const l of createSeed(NOW).leads.filter((x) => x.source === "ai"))
+      expect(l.attribution.referrer).toBeTruthy();
   });
   it("filters by Google Ads origin", () => {
     const s = createSeed(NOW);
@@ -42,5 +63,17 @@ describe("demo data", () => {
     expect(r.length).toBeGreaterThan(0);
     expect(r.every((l) => l.source === "google_ads")).toBe(true);
     expect(kpis(s, r, NOW).total).toBe(r.length);
+  });
+});
+
+describe("demo persistence validation", () => {
+  it("loads valid demo data and rejects malformed or cross-linked data", async () => {
+    const { parseDemoState } = await import("@/lib/crm/storage");
+    const s = createSeed(NOW);
+    expect(parseDemoState(JSON.stringify(s))).toEqual(s);
+    expect(parseDemoState('{"version":1}')).toBeNull();
+    expect(parseDemoState("broken")).toBeNull();
+    s.proposals[0]!.leadId = "missing";
+    expect(parseDemoState(JSON.stringify(s))).toBeNull();
   });
 });
