@@ -123,7 +123,7 @@ export function createSeed(now = Date.now()): CrmState {
     }
 
     if (i < 22) {
-      const script = CONV_SCRIPTS.default!;
+      const script = CONV_SCRIPTS["default"]!;
       const n = 2 + (i % 4);
       const msgs = script.slice(0, n).map(([dir, t], k) => ({
         id: `m-${i}-${k}`, dir,
