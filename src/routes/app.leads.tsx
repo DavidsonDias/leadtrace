@@ -85,7 +85,7 @@ function Leads() {
 }
 
 function NewLead({ open, onOpenChange, onCreate }: { open: boolean; onOpenChange: (o: boolean) => void; onCreate: Parameters<ReturnType<typeof useCrm>["addLead"]>[0] extends infer T ? (l: T) => void : never }) {
-  const [v, setV] = useState({ name: "", company: "", role: "Síndico", phone: "", email: "", service: SERVICES[0], source: "unknown" as SourceKey, owner: OWNERS[0], value: "" });
+  const [v, setV] = useState({ name: "", company: "", role: "Síndico", phone: "", email: "", service: SERVICES[0]!, source: "unknown" as SourceKey, owner: OWNERS[0]!, value: "" });
   const [err, setErr] = useState<string | null>(null);
   const set = (k: keyof typeof v) => (e: { target: { value: string } }) => setV({ ...v, [k]: e.target.value });
   return (

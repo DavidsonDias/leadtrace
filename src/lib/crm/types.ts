@@ -44,11 +44,11 @@ export type Confidence = "alta" | "media" | "baixa" | "nenhuma";
 
 export interface Attribution {
   channel: string;
-  campaign?: string;
-  utm?: Partial<Record<"utm_source" | "utm_medium" | "utm_campaign" | "utm_content" | "utm_term", string>>;
-  gclid?: string;
-  referrer?: string;
-  landingPage?: string;
+  campaign?: string | undefined;
+  utm?: Partial<Record<"utm_source" | "utm_medium" | "utm_campaign" | "utm_content" | "utm_term", string | undefined>> | undefined;
+  gclid?: string | undefined;
+  referrer?: string | undefined;
+  landingPage?: string | undefined;
   firstTouch: string;
   lastTouch: string;
   method: string;
@@ -71,14 +71,14 @@ export interface Lead {
   attributionHistory: AttributionChange[];
   stage: StageKey;
   owner: string;
-  value?: number;
+  value?: number | undefined;
   createdAt: string;
   lastInteraction: string;
-  nextActivity?: string;
+  nextActivity?: string | undefined;
   tags: string[];
   notes: string;
-  disqualifyReason?: string;
-  disqualifyNote?: string;
+  disqualifyReason?: string | undefined;
+  disqualifyNote?: string | undefined;
 }
 
 export interface Message { id: string; dir: "in" | "out"; text: string; at: string; status: "sent" | "delivered" | "read" | "received" }
@@ -86,7 +86,7 @@ export interface Conversation { leadId: string; messages: Message[]; unread: num
 
 export interface Proposal {
   id: string; leadId: string; value: number; status: ProposalStatus;
-  sentAt?: string; nextFollowUp?: string; notes: string;
+  sentAt?: string | undefined; nextFollowUp?: string | undefined; notes: string;
 }
 
 export interface Comment { id: string; leadId: string; text: string; at: string; author: string }

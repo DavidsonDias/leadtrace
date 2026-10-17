@@ -44,7 +44,7 @@ const STAGE_POOL: StageKey[] = [
 
 function attributionFor(source: SourceKey, i: number, first: string, last: string): Attribution {
   const base = { firstTouch: first, lastTouch: last };
-  const camp = ["fachadas-condominios-2026", "impermeabilizacao-verao", "recuperacao-estrutural-sp"][i % 3];
+  const camp = ["fachadas-condominios-2026", "impermeabilizacao-verao", "recuperacao-estrutural-sp"][i % 3]!;
   const by: Record<SourceKey, Omit<Attribution, "firstTouch" | "lastTouch">> = {
     google_ads: { channel: "Pago (CPC)", campaign: camp, utm: { utm_source: "google", utm_medium: "cpc", utm_campaign: camp, utm_term: "reforma de fachada" }, gclid: `demo-gclid-${1000 + i}`, landingPage: "/servicos/fachadas", method: "GCLID + UTM", evidence: "Clique registrado com gclid e UTM no formulário do site.", confidence: "alta" },
     google_organic: { channel: "Busca orgânica", referrer: "https://www.google.com/", landingPage: "/blog/quando-reformar-fachada", method: "Referrer", evidence: "Referrer google.com sem parâmetros de campanha.", confidence: "media" },
@@ -73,7 +73,7 @@ const CONV_SCRIPTS: Record<string, [("in" | "out"), string][]> = {
 
 export function createSeed(now = Date.now()): CrmState {
   const r = rng(20261015);
-  const pick = <T,>(a: readonly T[]) => a[Math.floor(r() * a.length)];
+  const pick = <T,>(a: readonly T[]) => a[Math.floor(r() * a.length)]!;
   const leads: Lead[] = [];
   const conversations: Conversation[] = [];
   const proposals: Proposal[] = [];
@@ -82,18 +82,18 @@ export function createSeed(now = Date.now()): CrmState {
   const iso = (t: number) => new Date(t).toISOString();
 
   for (let i = 0; i < 36; i++) {
-    const first = FIRST[i];
-    const lastName = LAST[i % LAST.length];
-    const [company, role] = COMPANIES[i % COMPANIES.length];
-    const source = SOURCE_POOL[i];
-    const stage = STAGE_POOL[i];
+    const first = FIRST[i]!;
+    const lastName = LAST[i % LAST.length]!;
+    const [company, role] = COMPANIES[i % COMPANIES.length]!;
+    const source = SOURCE_POOL[i]!;
+    const stage = STAGE_POOL[i]!;
     const ageDays = stage === "novo" ? 1 + Math.floor(r() * 10) : 8 + Math.floor(r() * 70);
     const created = now - ageDays * DAY - Math.floor(r() * 8) * 3_600_000;
     let lastInt = created + Math.floor(r() * (now - created) * 0.6);
     // Ensure some proposals cross the 7/15/30 day follow-up thresholds
-    if (stage === "proposta_enviada") lastInt = now - [3, 9, 17, 33, 12, 40, 5][i % 7] * DAY;
+    if (stage === "proposta_enviada") lastInt = now - [3, 9, 17, 33, 12, 40, 5][i % 7]! * DAY;
     const value = stage === "novo" ? undefined : Math.round((18 + r() * 460) * 1000);
-    const service = SERVICES[i % SERVICES.length];
+    const service = SERVICES[i % SERVICES.length]!;
     const id = `lead-${String(i + 1).padStart(2, "0")}`;
     const lead: Lead = {
       id, name: `${first} ${lastName}`, company: `${company}${i >= COMPANIES.length ? " II" : ""}`, role,
@@ -102,10 +102,10 @@ export function createSeed(now = Date.now()): CrmState {
       service, source,
       attribution: attributionFor(source, i, iso(created), iso(lastInt)),
       attributionHistory: [],
-      stage, owner: OWNERS[i % 3], value,
+      stage, owner: OWNERS[i % 3]!, value,
       createdAt: iso(created), lastInteraction: iso(lastInt),
       nextActivity: ["qualificado", "enviar_proposta", "novo"].includes(stage) ? iso(now + (Math.floor(r() * 10) - 4) * DAY) : undefined,
-      tags: [service.split(" ")[0], ...(r() > 0.6 ? ["Prioridade"] : [])],
+      tags: [service.split(" ")[0]!, ...(r() > 0.6 ? ["Prioridade"] : [])],
       notes: "Dados fictícios para demonstração.",
       ...(stage === "desqualificado" ? { disqualifyReason: pick(["Sem orçamento", "Fora do escopo", "Concorrência", "Sem interesse"]), disqualifyNote: "" } : {}),
     };
@@ -123,7 +123,7 @@ export function createSeed(now = Date.now()): CrmState {
     }
 
     if (i < 22) {
-      const script = CONV_SCRIPTS.default;
+      const script = CONV_SCRIPTS["default"]!;
       const n = 2 + (i % 4);
       const msgs = script.slice(0, n).map(([dir, t], k) => ({
         id: `m-${i}-${k}`, dir,
@@ -131,7 +131,7 @@ export function createSeed(now = Date.now()): CrmState {
         at: iso(created + k * 25 * 60_000),
         status: dir === "in" ? ("received" as const) : ("read" as const),
       }));
-      conversations.push({ leadId: id, messages: msgs, unread: msgs[msgs.length - 1].dir === "in" ? 1 + (i % 2) : 0 });
+      conversations.push({ leadId: id, messages: msgs, unread: msgs[msgs.length - 1]!.dir === "in" ? 1 + (i % 2) : 0 });
     }
     if (i % 4 === 0) {
       comments.push({ id: `c-${i}`, leadId: id, author: lead.owner, at: iso(lastInt), text: "Cliente pediu visita técnica antes da assembleia de condomínio." });

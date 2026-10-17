@@ -96,7 +96,7 @@ export function CrmProvider({ children }: { children: ReactNode }) {
     timers.current.push(window.setTimeout(() => setStatus("read"), 1600));
     timers.current.push(window.setTimeout(() => {
       const replies = ["Perfeito, obrigado pelo retorno!", "Vou levar para a assembleia e retorno em breve.", "Pode me enviar mais detalhes por aqui?", "Combinado. Aguardo o contato."];
-      setState((s) => ({ ...touch(s, leadId), conversations: s.conversations.map((c) => c.leadId === leadId ? { ...c, unread: c.unread + 1, messages: [...c.messages, { id: uid(), dir: "in", text: replies[Math.floor(Math.random() * replies.length)], at: nowIso(), status: "received" }] } : c) }));
+      setState((s) => ({ ...touch(s, leadId), conversations: s.conversations.map((c) => c.leadId === leadId ? { ...c, unread: c.unread + 1, messages: [...c.messages, { id: uid(), dir: "in", text: replies[Math.floor(Math.random() * replies.length)]!, at: nowIso(), status: "received" }] } : c) }));
     }, 3200));
   }, []);
 
