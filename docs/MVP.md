@@ -61,7 +61,7 @@ Secrets não entram no frontend. Auth utiliza PKCE e `getUser`; permissões fica
 
 ## Validação
 
-Nesta entrega: 46 testes automatizados de regras, persistência, banco/RLS, auth e adaptadores; cinco testes de navegador para edição persistente, pipeline/proposta/desqualificação, navegação móvel/tema, mensagens simuladas e separação do acesso real. TypeScript, build e checagem dos adaptadores Deno também executados. A CI roda a suíte e os testes Playwright.
+Nesta entrega: 47 testes automatizados de regras, persistência, banco/RLS, auth e adaptadores; cinco testes de navegador para edição persistente, pipeline/proposta/desqualificação, navegação móvel/tema, mensagens simuladas e separação do acesso real. TypeScript, build e checagem dos adaptadores Deno também executados. A CI roda a suíte e os testes Playwright.
 
 ## Próximas dependências de ativação
 
@@ -72,3 +72,5 @@ Nesta entrega: 46 testes automatizados de regras, persistência, banco/RLS, auth
 - Homologação com duas organizações reais, celulares e revisão completa de acessibilidade/LGPD/retenção.
 
 Essas dependências são externas. Os adaptadores estão preparados e testados localmente, mas não são apresentados como integrações conectadas.
+
+A cotação de um novo projeto na SevenDevX é US$ 10/mês; não foi criado sob a condição de custo adicional zero. A alternativa de schema isolado no projeto existente está preparada e testada, aguardando escolha explícita. Detalhes em [PRODUCTION.md](PRODUCTION.md).

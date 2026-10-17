@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { getSupabase } from "./client";
+import { getDatabase } from "./client";
 import { parseDemoState } from "@/lib/crm/storage";
 import { SOURCES, type CrmState, type Lead } from "@/lib/crm/types";
 const rowSchema = z.record(z.unknown());
@@ -19,7 +19,7 @@ export interface Organization {
   alertRules: CrmState["alertRules"];
 }
 export async function listOrganizations(): Promise<Organization[]> {
-  const { data, error } = await getSupabase()
+  const { data, error } = await getDatabase()
     .from("organizations")
     .select("id,name,website,alert_rules");
   if (error) throw error;
@@ -33,7 +33,7 @@ export async function listOrganizations(): Promise<Organization[]> {
 async function rows(table: string, org: string): Promise<Row[]> {
   const all: Row[] = [];
   for (let from = 0; ; from += 1000) {
-    const { data, error } = await getSupabase()
+    const { data, error } = await getDatabase()
       .from(table)
       .select("*")
       .eq("organization_id", org)
@@ -71,7 +71,7 @@ export async function loadWorkspace(
       "organization_members",
     ].map((t) => rows(t, org.id)),
   );
-  const { data: profiles, error } = await getSupabase().from("profiles").select("id,display_name");
+  const { data: profiles, error } = await getDatabase().from("profiles").select("id,display_name");
   if (error) throw error;
   const name = (id: string) => profiles?.find((p) => p.id === id)?.display_name ?? "Usuário";
   const roster = members!.map((m) => ({
@@ -176,7 +176,7 @@ export async function command(
   const serialized = JSON.parse(
     JSON.stringify(payload, (_, value: unknown) => (value === undefined ? null : value)),
   );
-  const { data, error } = await getSupabase().rpc("crm_command", {
+  const { data, error } = await getDatabase().rpc("crm_command", {
     org,
     command: operation,
     lead,

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/backend/auth-context";
-import { getSupabase } from "@/lib/backend/client";
+import { getDatabase } from "@/lib/backend/client";
 import {
   listOrganizations,
   type Organization,
@@ -55,7 +55,7 @@ export function WorkspaceSettings() {
               setBusy(true);
               const name = String(new FormData(e.currentTarget).get("name")).trim();
               try {
-                const { error } = await getSupabase()
+                const { error } = await getDatabase()
                   .from("profiles")
                   .update({ display_name: name })
                   .eq("id", user!.id);
@@ -96,7 +96,7 @@ export function WorkspaceSettings() {
                 const f = new FormData(e.currentTarget);
                 setBusy(true);
                 try {
-                  const { data, error } = await getSupabase()
+                  const { data, error } = await getDatabase()
                     .from("organizations")
                     .update({
                       name: String(f.get("name")).trim(),
@@ -155,7 +155,7 @@ export function WorkspaceSettings() {
                     setBusy(true);
                     const next = e.target.value;
                     try {
-                      const { error } = await getSupabase().rpc("set_member_role", {
+                      const { error } = await getDatabase().rpc("set_member_role", {
                         org: org!.id,
                         member: m.userId,
                         new_role: next,
