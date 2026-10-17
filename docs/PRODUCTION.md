@@ -105,3 +105,22 @@ No ambiente de desenvolvimento desta entrega, os testes Playwright usaram Chromi
 Os testes Postgres executam a migration de verdade via PGlite, com papéis `anon`, `authenticated` e `service_role`. Cobrem isolamento entre organizações, restrição de atendentes, escalada de privilégios, motivo de desqualificação, FKs, transações comerciais, autoria de auditoria, preservação do último administrador, deduplicação de WhatsApp/site e origem desconhecida sem evidência. As funções Deno também passaram em `deno check`.
 
 Limites de homologação: login e recuperação com contas reais, Google, Meta, formulário real, concorrência em Postgres remoto, aparelhos Android/iOS, auditoria WCAG completa e política LGPD/retenção do cliente. Os testes locais não substituem essas validações externas.
+
+## Alternativa sem nova instância de banco
+
+A cotação do Supabase para um projeto adicional na organização SevenDevX foi **US$ 10/mês**. O usuário autorizou criação somente sem custo adicional; nenhum projeto foi criado e nenhum custo foi confirmado.
+
+Como alternativa técnica, o repositório suporta um schema `leadtrace` no projeto SevenDevX existente. Essa alternativa precisa ser escolhida explicitamente antes de qualquer alteração externa: compartilha a infraestrutura, o serviço Auth, as identidades e os limites do projeto existente. Uma alteração de senha de uma identidade compartilhada vale para todos os aplicativos que usam essa mesma identidade. Não cria nova instância nem novo custo de compute de projeto; consumo continua sujeito aos limites e plano já existentes.
+
+`npm run db:isolated` gera `supabase/isolated-schema.sql` e `supabase/bootstrap-isolated.sql`. A geração preserva o papel PostgreSQL `PUBLIC` e muda apenas os namespaces dos objetos/grants para `leadtrace` e `leadtrace_private`. Um teste executa esse SQL com um produto existente em `public`, confirma que dados/políticas/grants desse produto não mudam e exerce o CRM no schema isolado.
+
+Para essa opção, após a escolha do projeto:
+
+1. Verificar que os schemas `leadtrace` e `leadtrace_private` ainda não existem e revisar os limites do projeto.
+2. Aplicar **somente** `supabase/isolated-schema.sql`. Não executar a migration de schema público nesse projeto compartilhado e não usar `db push` com as migrations públicas.
+3. Adicionar apenas `leadtrace` aos schemas expostos pela Data API, preservando os schemas já configurados. **Nunca expor `leadtrace_private`.**
+4. Usar `supabase/bootstrap-isolated.sql` para o vínculo inicial.
+5. Configurar `VITE_SUPABASE_DB_SCHEMA=leadtrace` no frontend e `LEADTRACE_DB_SCHEMA=leadtrace` nos adaptadores. As keys/URL serão do projeto selecionado; continuam valendo todas as políticas de tenant e responsável.
+6. Acrescentar as URLs de retorno LeadTrace ao Auth sem substituir o Site URL, os provedores ou os templates usados pelos outros aplicativos. Validar as identidades compartilhadas e os dois aplicativos antes de liberar acesso.
+
+A preparação dessa opção não autoriza sua aplicação. Nenhum schema, usuário, grant ou configuração do projeto SevenDevX existente foi alterado nesta entrega.

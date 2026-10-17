@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { CrmCtx, type Ctx } from "@/lib/crm/context";
-import { getSupabase } from "./client";
+import { getDatabase } from "./client";
 import {
   command,
   listOrganizations,
@@ -134,7 +134,7 @@ export function LiveCrmProvider({
     upsertProposal: ({ leadId, ...patch }) => write("proposal_save", leadId, patch),
     resolveAlert: (id) =>
       run(async () => {
-        const { error } = await getSupabase()
+        const { error } = await getDatabase()
           .from("notifications")
           .upsert(
             { organization_id: organization.id, alert_key: id },
@@ -146,7 +146,7 @@ export function LiveCrmProvider({
     setAttribution: (id, source, reason) => write("attribution_set", id, { source, reason }),
     setAlertRules: (rules) =>
       run(async () => {
-        const { data, error } = await getSupabase()
+        const { data, error } = await getDatabase()
           .from("organizations")
           .update({ alert_rules: rules })
           .eq("id", organization.id)

@@ -41,3 +41,7 @@ export const authError = (error: unknown) => {
   if (/rate limit|too many/i.test(message)) return "Muitas tentativas. Aguarde alguns minutos.";
   return "Não foi possível concluir a operação. Verifique sua conexão e tente novamente.";
 };
+
+export const databaseSchema =
+  import.meta.env.VITE_SUPABASE_DB_SCHEMA === "leadtrace" ? "leadtrace" : "public";
+export const getDatabase = () => getSupabase().schema(databaseSchema);
