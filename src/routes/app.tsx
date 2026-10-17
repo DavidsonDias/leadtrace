@@ -12,7 +12,8 @@ import {
   LogOut,
   FlaskConical,
 } from "lucide-react";
-import { CrmProvider, useCrm } from "@/lib/crm/store";
+import { CrmProvider } from "@/lib/crm/store";
+import { useCrm } from "@/lib/crm/context";
 import { computeAlerts } from "@/lib/crm/metrics";
 import { Logo, LogoMark } from "@/components/brand/Logo";
 import { LeadSheet } from "@/components/crm/LeadSheet";

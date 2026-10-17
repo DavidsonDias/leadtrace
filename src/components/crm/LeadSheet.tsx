@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { CrmLink } from "./CrmLink";
 import {
   Sheet,
   SheetContent,
@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useCrm } from "@/lib/crm/store";
+import { useCrm } from "@/lib/crm/context";
 import {
   OWNERS,
   SOURCES,
@@ -24,7 +24,7 @@ import { brl, fmtDate } from "@/lib/crm/metrics";
 import { ConfidenceMeter, OriginBadge } from "./OriginBadge";
 import { DisqualifyDialog } from "./DisqualifyDialog";
 import { MessagesSquare } from "lucide-react";
-import { toast } from "sonner";
+import { useCrmFeedback } from "@/lib/crm/feedback";
 import { z } from "zod";
 
 export const selectCls = "h-9 w-full rounded-md border border-input bg-background px-2 text-sm";
@@ -42,7 +42,8 @@ export function LeadSheet() {
 }
 
 function LeadDetail({ id }: { id: string }) {
-  const { state, moveStage, updateLead, addComment, setAttribution, openLead } = useCrm();
+  const toast = useCrmFeedback();
+  const { state, moveStage, updateLead, addComment, setAttribution, openLead, owners } = useCrm();
   const lead = state.leads.find((l) => l.id === id)!;
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState({
@@ -203,7 +204,7 @@ function LeadDetail({ id }: { id: string }) {
               value={lead.owner}
               onChange={(e) => updateLead(id, { owner: e.target.value })}
             >
-              {OWNERS.map((o) => (
+              {owners.map((o) => (
                 <option key={o}>{o}</option>
               ))}
             </select>
@@ -230,9 +231,9 @@ function LeadDetail({ id }: { id: string }) {
           </p>
         )}
         <Button variant="outline" size="sm" asChild onClick={() => openLead(null)}>
-          <Link to="/app/inbox" search={{ lead: id }}>
+          <CrmLink module="inbox" lead={id}>
             <MessagesSquare /> Abrir conversa
-          </Link>
+          </CrmLink>
         </Button>
 
         <section className="rounded-lg border border-border bg-card p-4">

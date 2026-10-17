@@ -1,19 +1,10 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { parseDemoState } from "./storage";
 import { saveProposal } from "./transitions";
 import { toast } from "sonner";
 import { createSeed } from "./seed";
 import type { CrmState, Lead, Proposal, SourceKey, StageKey, Activity } from "./types";
-import { stageLabel, SOURCES } from "./types";
+import { stageLabel, SOURCES, OWNERS } from "./types";
 
 /** Demo workspace is persisted in this browser only — fully isolated from any production data. */
 const KEY = "leadtrace.demo.v1";
@@ -34,28 +25,7 @@ function load(): CrmState {
   return createSeed();
 }
 
-interface Ctx {
-  state: CrmState;
-  openLeadId: string | null;
-  openLead: (id: string | null) => void;
-  moveStage: (id: string, stage: StageKey, reason?: string, note?: string) => void;
-  updateLead: (id: string, patch: Partial<Lead>) => void;
-  addLead: (
-    l: Omit<Lead, "id" | "createdAt" | "lastInteraction" | "attributionHistory" | "attribution"> & {
-      attribution?: Lead["attribution"];
-    },
-  ) => string;
-  addComment: (leadId: string, text: string) => void;
-  sendMessage: (leadId: string, text: string) => void;
-  markRead: (leadId: string) => void;
-  upsertProposal: (p: Partial<Proposal> & { leadId: string }) => void;
-  resolveAlert: (id: string) => void;
-  logFollowUp: (leadId: string, text: string, next?: string) => void;
-  setAttribution: (leadId: string, source: SourceKey, reason: string) => void;
-  setAlertRules: (r: CrmState["alertRules"]) => void;
-  reset: () => void;
-}
-const CrmCtx = createContext<Ctx | null>(null);
+import { CrmCtx, type Ctx } from "./context";
 
 export function CrmProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<CrmState>(() => load());
@@ -361,6 +331,10 @@ export function CrmProvider({ children }: { children: ReactNode }) {
   const value = useMemo<Ctx>(
     () => ({
       state,
+      mode: "demo",
+      owners: OWNERS,
+      organizationName: "Resende Torres Engenharia",
+      organizationId: null,
       openLeadId,
       openLead,
       moveStage,
@@ -394,10 +368,4 @@ export function CrmProvider({ children }: { children: ReactNode }) {
     ],
   );
   return <CrmCtx.Provider value={value}>{children}</CrmCtx.Provider>;
-}
-
-export function useCrm() {
-  const c = useContext(CrmCtx);
-  if (!c) throw new Error("useCrm must be used inside CrmProvider");
-  return c;
 }

@@ -1,6 +1,7 @@
 import { act, cleanup, render } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { CrmProvider, useCrm } from "@/lib/crm/store";
+import { CrmProvider } from "@/lib/crm/store";
+import { useCrm } from "@/lib/crm/context";
 let crm: ReturnType<typeof useCrm>;
 function Probe() {
   crm = useCrm();

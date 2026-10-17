@@ -1,0 +1,378 @@
+-- Separate production storage. No demonstration records are inserted here.
+create schema if not exists private;
+revoke all on schema private from public;
+grant usage on schema private to authenticated;
+
+create table public.organizations (
+  id uuid primary key default gen_random_uuid(), name text not null check (length(trim(name)) between 2 and 120),
+  website text not null default '', created_at timestamptz not null default now(),
+  alert_rules jsonb not null default '{"d7":true,"d15":true,"d30":true,"overdue":true,"awaiting":true}' check (alert_rules ?& array['d7','d15','d30','overdue','awaiting'] and jsonb_typeof(alert_rules->'d7')='boolean' and jsonb_typeof(alert_rules->'d15')='boolean' and jsonb_typeof(alert_rules->'d30')='boolean' and jsonb_typeof(alert_rules->'overdue')='boolean' and jsonb_typeof(alert_rules->'awaiting')='boolean')
+);
+create table public.profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  display_name text not null check (length(trim(display_name)) between 2 and 100),
+  created_at timestamptz not null default now()
+);
+create table public.organization_members (
+  organization_id uuid not null references public.organizations(id), user_id uuid not null references public.profiles(id),
+  role text not null check (role in ('admin','manager','agent')), created_at timestamptz not null default now(),
+  primary key (organization_id,user_id)
+);
+create index members_user_org on public.organization_members(user_id,organization_id);
+-- Only the caller's own role is returned. Kept outside the exposed API schema to avoid recursive membership RLS.
+create function private.member_role(org uuid) returns text language sql stable security definer set search_path = '' as $$
+  select m.role from public.organization_members m where m.organization_id=org and m.user_id=(select auth.uid()) and (select auth.uid()) is not null
+$$;
+revoke all on function private.member_role(uuid) from public;
+grant execute on function private.member_role(uuid) to authenticated;
+
+create table public.lead_sources (
+  organization_id uuid not null references public.organizations(id), key text not null,
+  label text not null, primary key (organization_id,key)
+);
+create table public.pipeline_stages (
+  organization_id uuid not null references public.organizations(id), key text not null,
+  label text not null, position integer not null, primary key (organization_id,key)
+);
+create table public.leads (
+  id uuid primary key default gen_random_uuid(), organization_id uuid not null references public.organizations(id),
+  owner_id uuid not null, stage text not null default 'novo', source text not null default 'unknown',
+  name text not null check (length(trim(name)) between 2 and 100), company text not null check (length(trim(company)) between 2 and 120),
+  phone text not null check (length(phone) between 8 and 25), email text not null default '', role text not null default '',
+  service text not null default '', value numeric(14,2) check (value >= 0 and value < 'Infinity'::numeric),
+  tags text[] not null default '{}', notes text not null default '' check (length(notes)<=5000),
+  attribution jsonb not null default jsonb_build_object('channel','Origem desconhecida','firstTouch',now(),'lastTouch',now(),'method','Nenhum','evidence','Sem evidência técnica disponível.','confidence','nenhuma') check (attribution ?& array['channel','firstTouch','lastTouch','method','evidence','confidence'] and attribution->>'confidence' in ('alta','media','baixa','nenhuma')), disqualify_reason text, disqualify_note text,
+  created_at timestamptz not null default now(), updated_at timestamptz not null default now(),
+  last_interaction timestamptz not null default now(), next_activity timestamptz, deleted_at timestamptz,
+  unique (organization_id,id),
+  foreign key (organization_id,owner_id) references public.organization_members(organization_id,user_id),
+  foreign key (organization_id,stage) references public.pipeline_stages(organization_id,key),
+  foreign key (organization_id,source) references public.lead_sources(organization_id,key),
+  check (stage <> 'desqualificado' or (disqualify_reason is not null and disqualify_reason in ('Sem orçamento','Fora do escopo','Sem interesse','Contato inválido','Concorrência','Outro') and (disqualify_reason <> 'Outro' or (disqualify_note is not null and length(trim(disqualify_note)) > 0))))
+);
+create index leads_org_created on public.leads(organization_id,created_at desc) where deleted_at is null;
+create index leads_org_owner on public.leads(organization_id,owner_id) where deleted_at is null;
+create index leads_org_stage on public.leads(organization_id,stage) where deleted_at is null;
+create index leads_org_source on public.leads(organization_id,source) where deleted_at is null;
+create index leads_next_activity on public.leads(organization_id,next_activity) where deleted_at is null and next_activity is not null;
+create function private.can_access_lead(org uuid, lead uuid) returns boolean language sql stable security invoker set search_path = '' as $$
+  select exists(select 1 from public.leads l where l.organization_id=org and l.id=lead and l.deleted_at is null)
+$$;
+revoke all on function private.can_access_lead(uuid,uuid) from public;
+grant execute on function private.can_access_lead(uuid,uuid) to authenticated;
+
+create table public.attribution_events (
+  id uuid primary key default gen_random_uuid(), organization_id uuid not null, lead_id uuid not null,
+  from_source text not null, to_source text not null, reason text not null check(length(trim(reason))>=3),
+  actor_id uuid not null default auth.uid() references public.profiles(id), created_at timestamptz not null default now(),
+  foreign key(organization_id,lead_id) references public.leads(organization_id,id)
+);
+create table public.pipeline_history (
+  id uuid primary key default gen_random_uuid(), organization_id uuid not null, lead_id uuid not null,
+  from_stage text not null, to_stage text not null, reason text,
+  actor_id uuid not null default auth.uid() references public.profiles(id), created_at timestamptz not null default now(),
+  foreign key(organization_id,lead_id) references public.leads(organization_id,id)
+);
+create table public.proposals (
+  id uuid primary key default gen_random_uuid(), organization_id uuid not null, lead_id uuid not null,
+  value numeric(14,2) not null default 0 check (value >= 0 and value < 'Infinity'::numeric),
+  status text not null default 'a_preparar' check(status in ('a_preparar','enviada','aguardando','aceita','recusada','expirada')),
+  sent_at timestamptz, next_follow_up timestamptz, notes text not null default '' check(length(notes)<=5000),
+  created_at timestamptz not null default now(), unique(organization_id,lead_id),
+  foreign key(organization_id,lead_id) references public.leads(organization_id,id),
+  check(status not in ('enviada','aguardando','aceita') or sent_at is not null)
+);
+create table public.conversations (
+  id uuid primary key default gen_random_uuid(), organization_id uuid not null, lead_id uuid not null,
+  unread integer not null default 0 check(unread>=0), created_at timestamptz not null default now(),
+  unique(organization_id,lead_id), unique(organization_id,id,lead_id),
+  foreign key(organization_id,lead_id) references public.leads(organization_id,id)
+);
+create table public.messages (
+  id uuid primary key default gen_random_uuid(), organization_id uuid not null, lead_id uuid not null, conversation_id uuid not null,
+  direction text not null check(direction in ('in','out')), body text not null check(length(body) between 1 and 4096),
+  status text not null check(status in ('sent','delivered','read','received','failed')), provider_id text unique,
+  created_at timestamptz not null default now(),
+  foreign key(organization_id,conversation_id,lead_id) references public.conversations(organization_id,id,lead_id)
+);
+create table public.activities (
+  id uuid primary key default gen_random_uuid(), organization_id uuid not null, lead_id uuid not null,
+  type text not null check(type in ('stage','message','comment','proposal','followup','lead','attribution')),
+  text text not null check(length(text)<=5000), actor_id uuid not null default auth.uid() references public.profiles(id), created_at timestamptz not null default now(),
+  foreign key(organization_id,lead_id) references public.leads(organization_id,id)
+);
+create table public.notes (
+  id uuid primary key default gen_random_uuid(), organization_id uuid not null, lead_id uuid not null,
+  text text not null check(length(trim(text)) between 1 and 5000), actor_id uuid not null default auth.uid() references public.profiles(id), created_at timestamptz not null default now(),
+  foreign key(organization_id,lead_id) references public.leads(organization_id,id)
+);
+create table public.notifications (
+  id uuid primary key default gen_random_uuid(), organization_id uuid not null references public.organizations(id),
+  user_id uuid not null default auth.uid() references public.profiles(id), alert_key text not null,
+  created_at timestamptz not null default now(), unique(organization_id,user_id,alert_key)
+);
+-- No access tokens, private API keys or webhook secrets belong in this public table.
+create table public.integration_settings (
+  id uuid primary key default gen_random_uuid(), organization_id uuid not null references public.organizations(id),
+  provider text not null check(provider in ('whatsapp','google_oauth','google_ads','site','webhooks')),
+  status text not null default 'not_configured' check(status in ('not_configured','connected','error')),
+  updated_at timestamptz not null default now(), unique(organization_id,provider)
+);
+create table public.audit_logs (
+  id uuid primary key default gen_random_uuid(), organization_id uuid not null references public.organizations(id),
+  actor_id uuid references public.profiles(id), details jsonb not null default '{}', entity_table text not null, entity_id text not null,
+  action text not null, changed_fields text[] not null default '{}', created_at timestamptz not null default now()
+);
+create index audit_org_time on public.audit_logs(organization_id,created_at desc);
+
+-- Seed only configuration for each new organization; organizations/users must be provisioned deliberately.
+create function private.seed_configuration() returns trigger language plpgsql security definer set search_path = '' as $$
+begin
+  insert into public.pipeline_stages(organization_id,key,label,position) values
+    (new.id,'novo','Novo lead',1),(new.id,'qualificado','Lead qualificado',2),(new.id,'enviar_proposta','Enviar proposta',3),
+    (new.id,'proposta_enviada','Proposta enviada',4),(new.id,'desqualificado','Lead desqualificado',5),(new.id,'fechado','Negócio fechado',6);
+  insert into public.lead_sources(organization_id,key,label) values
+    (new.id,'google_ads','Google Ads'),(new.id,'google_organic','Google Orgânico'),(new.id,'gbp','Google Business Profile'),
+    (new.id,'instagram','Instagram'),(new.id,'facebook','Facebook'),(new.id,'whatsapp','WhatsApp direto'),(new.id,'site','Site institucional'),
+    (new.id,'referral','Indicação'),(new.id,'ai','IA / Assistentes'),(new.id,'other','Outras fontes'),(new.id,'unknown','Origem desconhecida');
+  return new;
+end $$;
+revoke all on function private.seed_configuration() from public;
+create trigger organization_configuration after insert on public.organizations for each row execute function private.seed_configuration();
+
+-- Audit identifiers and changed field names, never message bodies or old/new PII payloads.
+create function private.audit_change() returns trigger language plpgsql security definer set search_path = '' as $$
+declare record jsonb; old_record jsonb; fields text[];
+begin
+  record := case when tg_op='DELETE' then to_jsonb(old) else to_jsonb(new) end;
+  old_record := case when tg_op='UPDATE' then to_jsonb(old) else '{}'::jsonb end;
+  select array_agg(k) into fields from jsonb_object_keys(record) k where record->k is distinct from old_record->k;
+  insert into public.audit_logs(organization_id,actor_id,entity_table,entity_id,action,changed_fields,details)
+  values (case when tg_table_name='organizations' then (record->>'id')::uuid else (record->>'organization_id')::uuid end, auth.uid(), tg_table_name, coalesce(record->>'id',record->>'user_id'),tg_op,coalesce(fields,'{}'),case when tg_table_name='organization_members' then jsonb_build_object('previousRole',old_record->>'role','newRole',record->>'role') else '{}'::jsonb end);
+  return case when tg_op='DELETE' then old else new end;
+end $$;
+revoke all on function private.audit_change() from public;
+
+-- RLS is enabled before exposing any tables to PostgREST.
+alter table public.organizations enable row level security;
+alter table public.profiles enable row level security;
+alter table public.organization_members enable row level security;
+alter table public.leads enable row level security;
+create policy organizations_read on public.organizations for select to authenticated using(private.member_role(id) is not null);
+create policy organizations_update on public.organizations for update to authenticated using(private.member_role(id)='admin') with check(private.member_role(id)='admin');
+create policy profiles_read on public.profiles for select to authenticated using(id=(select auth.uid()) or exists(select 1 from public.organization_members m where m.user_id=profiles.id and private.member_role(m.organization_id) is not null));
+create policy profiles_update on public.profiles for update to authenticated using(id=(select auth.uid())) with check(id=(select auth.uid()));
+create policy members_read on public.organization_members for select to authenticated using(private.member_role(organization_id) is not null);
+-- Provisioning and role management use a trusted administrative procedure, never arbitrary browser membership writes.
+create policy leads_read on public.leads for select to authenticated using(deleted_at is null and (private.member_role(organization_id) in ('admin','manager') or (private.member_role(organization_id)='agent' and owner_id=(select auth.uid()))));
+create policy leads_insert on public.leads for insert to authenticated with check(private.member_role(organization_id) in ('admin','manager') or (private.member_role(organization_id)='agent' and owner_id=(select auth.uid())));
+create policy leads_update on public.leads for update to authenticated using(private.member_role(organization_id) in ('admin','manager') or (private.member_role(organization_id)='agent' and owner_id=(select auth.uid()))) with check(private.member_role(organization_id) in ('admin','manager') or (private.member_role(organization_id)='agent' and owner_id=(select auth.uid())));
+
+do $$ declare tab text; begin
+  foreach tab in array array['lead_sources','pipeline_stages','integration_settings','audit_logs'] loop
+    execute format('alter table public.%I enable row level security',tab);
+    execute format('create policy tenant_read on public.%I for select to authenticated using(private.member_role(organization_id) is not null)',tab);
+  end loop;
+  foreach tab in array array['attribution_events','pipeline_history','proposals','conversations','messages','activities','notes'] loop
+    execute format('alter table public.%I enable row level security',tab);
+    execute format('create index %I on public.%I(organization_id,lead_id)',tab||'_lead_idx',tab);
+    execute format('create policy lead_read on public.%I for select to authenticated using(private.can_access_lead(organization_id,lead_id))',tab);
+    if tab <> 'messages' then
+      execute format('create policy lead_insert on public.%I for insert to authenticated with check(private.can_access_lead(organization_id,lead_id)%s)',tab,case when tab in ('notes','activities','attribution_events','pipeline_history') then ' and actor_id=(select auth.uid())' else '' end);
+    end if;
+    if tab in ('proposals','conversations') then
+      execute format('create policy lead_update on public.%I for update to authenticated using(private.can_access_lead(organization_id,lead_id)) with check(private.can_access_lead(organization_id,lead_id))',tab);
+    end if;
+  end loop;
+  foreach tab in array array['leads','proposals','notes','attribution_events','pipeline_history','organization_members','organizations'] loop
+    execute format('create trigger audit_record after insert or update or delete on public.%I for each row execute function private.audit_change()',tab);
+  end loop;
+end $$;
+alter table public.notifications enable row level security;
+create policy notifications_read on public.notifications for select to authenticated using(user_id=(select auth.uid()) and private.member_role(organization_id) is not null);
+create policy notifications_insert on public.notifications for insert to authenticated with check(user_id=(select auth.uid()) and private.member_role(organization_id) is not null);
+-- Limit audit visibility to management; no per-message content is logged.
+drop policy tenant_read on public.audit_logs;
+create policy audit_read on public.audit_logs for select to authenticated using(private.member_role(organization_id) in ('admin','manager'));
+
+revoke all on all tables in schema public from anon, authenticated;
+grant select on all tables in schema public to authenticated;
+grant update(display_name) on public.profiles to authenticated;
+grant update(name,website,alert_rules) on public.organizations to authenticated;
+grant insert,update on public.leads,public.proposals,public.conversations to authenticated;
+grant insert on public.notes,public.attribution_events,public.pipeline_history,public.activities,public.notifications to authenticated;
+
+-- Transactional commercial commands. SECURITY INVOKER preserves all tenant/assignment RLS policies.
+create function public.crm_command(org uuid, command text, lead uuid default null, payload jsonb default '{}')
+returns uuid language plpgsql security invoker set search_path = '' as $$
+declare l public.leads; p public.proposals; new_stage text; t timestamptz := now(); result uuid; next_date timestamptz; fields jsonb;
+begin
+  if auth.uid() is null or private.member_role(org) is null then raise exception 'Acesso negado' using errcode='42501'; end if;
+  if command='lead_create' then
+    result := coalesce((payload->>'id')::uuid, gen_random_uuid());
+    insert into public.leads(id,organization_id,owner_id,name,company,phone,email,role,service,source,value,attribution)
+    values(result,org,coalesce((payload->>'ownerId')::uuid,auth.uid()),trim(payload->>'name'),trim(payload->>'company'),trim(payload->>'phone'),coalesce(payload->>'email',''),coalesce(payload->>'role',''),coalesce(payload->>'service',''),coalesce(payload->>'source','unknown'),(payload->>'value')::numeric,
+      jsonb_build_object('channel',coalesce(payload->>'source','unknown'),'firstTouch',t,'lastTouch',t,'method','Cadastro manual','evidence','Origem declarada no cadastro manual.','confidence',case when coalesce(payload->>'source','unknown')='unknown' then 'nenhuma' else 'baixa' end));
+    insert into public.activities(organization_id,lead_id,type,text) values(org,result,'lead','Lead cadastrado');
+    return result;
+  end if;
+  select * into l from public.leads where organization_id=org and id=lead and deleted_at is null for update;
+  if not found then raise exception 'Lead não encontrado ou acesso negado' using errcode='42501'; end if;
+  result := l.id;
+  case command
+  when 'lead_update' then
+    if payload - array['name','company','phone','email','role','service','ownerId','notes','nextActivity','value','tags'] <> '{}'::jsonb then raise exception 'Campo não editável'; end if;
+    update public.leads set
+      name=coalesce(payload->>'name',name), company=coalesce(payload->>'company',company),phone=coalesce(payload->>'phone',phone),email=coalesce(payload->>'email',email),
+      role=coalesce(payload->>'role',role),service=coalesce(payload->>'service',service),owner_id=coalesce((payload->>'ownerId')::uuid,owner_id),notes=coalesce(payload->>'notes',notes),
+      value=case when payload ? 'value' then (payload->>'value')::numeric else value end,
+      next_activity=case when payload ? 'nextActivity' then (payload->>'nextActivity')::timestamptz else next_activity end,updated_at=t
+    where id=lead and organization_id=org;
+    if payload ? 'nextActivity' then update public.proposals set next_follow_up=(payload->>'nextActivity')::timestamptz where organization_id=org and lead_id=lead; end if;
+    insert into public.activities(organization_id,lead_id,type,text) values(org,lead,'lead','Informações do lead atualizadas');
+  when 'stage_move' then
+    new_stage:=payload->>'stage';
+    if new_stage=l.stage then return lead; end if;
+    update public.leads set stage=new_stage,disqualify_reason=case when new_stage='desqualificado' then payload->>'reason' end,
+      disqualify_note=case when new_stage='desqualificado' then payload->>'note' end,updated_at=t where organization_id=org and id=lead;
+    insert into public.pipeline_history(organization_id,lead_id,from_stage,to_stage,reason) values(org,lead,l.stage,new_stage,payload->>'reason');
+    if new_stage in ('enviar_proposta','proposta_enviada') then
+      insert into public.proposals(organization_id,lead_id,value,status,sent_at) values(org,lead,coalesce(l.value,0),case when new_stage='enviar_proposta' then 'a_preparar' else 'enviada' end,case when new_stage='proposta_enviada' then t end)
+      on conflict(organization_id,lead_id) do update set status=excluded.status,sent_at=case when new_stage='proposta_enviada' then coalesce(proposals.sent_at,t) else proposals.sent_at end;
+    elsif new_stage='fechado' then
+      update public.proposals set status='aceita',sent_at=coalesce(sent_at,t) where organization_id=org and lead_id=lead;
+    elsif new_stage='desqualificado' then
+      update public.proposals set status='recusada' where organization_id=org and lead_id=lead;
+    end if;
+    insert into public.activities(organization_id,lead_id,type,text) values(org,lead,'stage','Etapa: '||l.stage||' → '||new_stage);
+  when 'proposal_save' then
+    select * into p from public.proposals where organization_id=org and lead_id=lead;
+    fields := coalesce(to_jsonb(p),'{}') || payload;
+    new_stage:=coalesce(payload->>'status',p.status,'a_preparar');
+    insert into public.proposals(organization_id,lead_id,value,status,sent_at,next_follow_up,notes)
+    values(org,lead,coalesce((payload->>'value')::numeric,p.value,l.value,0),new_stage,
+      coalesce((payload->>'sentAt')::timestamptz,p.sent_at,case when new_stage in ('enviada','aguardando','aceita') then t end),
+      case when payload ? 'nextFollowUp' then (payload->>'nextFollowUp')::timestamptz else p.next_follow_up end,coalesce(payload->>'notes',p.notes,''))
+    on conflict(organization_id,lead_id) do update set value=excluded.value,status=excluded.status,sent_at=excluded.sent_at,next_follow_up=excluded.next_follow_up,notes=excluded.notes;
+    new_stage:=case when payload->>'status'='aceita' then 'fechado'
+      when l.stage not in ('fechado','desqualificado') and payload->>'status' in ('enviada','aguardando') then 'proposta_enviada'
+      when l.stage not in ('fechado','desqualificado') and payload->>'status'='a_preparar' then 'enviar_proposta' else l.stage end;
+    update public.leads set stage=new_stage,value=coalesce((payload->>'value')::numeric,value),
+      next_activity=case when payload ? 'nextFollowUp' then (payload->>'nextFollowUp')::timestamptz else next_activity end,updated_at=t where organization_id=org and id=lead;
+    if new_stage<>l.stage then insert into public.pipeline_history(organization_id,lead_id,from_stage,to_stage) values(org,lead,l.stage,new_stage); end if;
+    insert into public.activities(organization_id,lead_id,type,text) values(org,lead,'proposal','Proposta atualizada');
+  when 'comment_add' then
+    insert into public.notes(organization_id,lead_id,text) values(org,lead,trim(payload->>'text'));
+    insert into public.activities(organization_id,lead_id,type,text) values(org,lead,'comment','Comentário registrado');
+  when 'followup_log' then
+    insert into public.notes(organization_id,lead_id,text) values(org,lead,'Follow-up: '||trim(payload->>'text'));
+    next_date:=(payload->>'next')::timestamptz;
+    update public.leads set last_interaction=t,next_activity=next_date,updated_at=t where organization_id=org and id=lead;
+    update public.proposals set next_follow_up=next_date where organization_id=org and lead_id=lead;
+    insert into public.activities(organization_id,lead_id,type,text) values(org,lead,'followup','Acompanhamento registrado');
+  when 'attribution_set' then
+    if payload->>'reason' is null or length(trim(payload->>'reason'))<3 then raise exception 'Justificativa obrigatória'; end if;
+    insert into public.attribution_events(organization_id,lead_id,from_source,to_source,reason) values(org,lead,l.source,payload->>'source',trim(payload->>'reason'));
+    update public.leads set source=payload->>'source',attribution=attribution||jsonb_build_object('method','Atribuição manual','evidence',trim(payload->>'reason'),'confidence',case when payload->>'source'='unknown' then 'nenhuma' else 'baixa' end,'channel',payload->>'source'),updated_at=t where organization_id=org and id=lead;
+    insert into public.activities(organization_id,lead_id,type,text) values(org,lead,'attribution','Origem alterada com justificativa');
+  when 'mark_read' then
+    update public.conversations set unread=0 where organization_id=org and lead_id=lead;
+  else raise exception 'Comando não permitido';
+  end case;
+  return result;
+end $$;
+revoke all on function public.crm_command(uuid,text,uuid,jsonb) from public,anon;
+grant execute on function public.crm_command(uuid,text,uuid,jsonb) to authenticated;
+
+-- Immutable tenant and identity fields block moving an existing record between organizations.
+create function private.protect_lead_identity() returns trigger language plpgsql security invoker set search_path = '' as $$
+begin
+  if new.organization_id<>old.organization_id or new.id<>old.id or new.created_at<>old.created_at then raise exception 'Identidade e organização são imutáveis' using errcode='42501'; end if;
+  return new;
+end $$;
+revoke all on function private.protect_lead_identity() from public;
+create trigger lead_identity before update on public.leads for each row execute function private.protect_lead_identity();
+
+-- Controlled membership changes. Internal privileged lookup/write is never exposed as an unguarded API.
+create function private.change_member_role(org uuid, member uuid, next_role text) returns void
+language plpgsql security definer set search_path = '' as $$
+begin
+  if auth.uid() is null then raise exception 'Acesso negado' using errcode='42501'; end if;
+  perform 1 from public.organizations where id=org for update;
+  if private.member_role(org) is distinct from 'admin' then raise exception 'Acesso negado' using errcode='42501'; end if;
+  if next_role not in ('admin','manager','agent') or next_role is null then raise exception 'Papel inválido'; end if;
+  if not exists(select 1 from public.organization_members where organization_id=org and user_id=member) then raise exception 'Membro não encontrado'; end if;
+  if next_role<>'admin' and exists(select 1 from public.organization_members where organization_id=org and user_id=member and role='admin') and (select count(*) from public.organization_members where organization_id=org and role='admin')<=1 then raise exception 'A organização precisa manter um administrador'; end if;
+  update public.organization_members set role=next_role where organization_id=org and user_id=member;
+end $$;
+revoke all on function private.change_member_role(uuid,uuid,text) from public;
+grant execute on function private.change_member_role(uuid,uuid,text) to authenticated;
+create function public.set_member_role(org uuid, member uuid, new_role text) returns void language sql security invoker set search_path = '' as $$ select private.change_member_role(org,member,new_role) $$;
+revoke all on function public.set_member_role(uuid,uuid,text) from public,anon;
+grant execute on function public.set_member_role(uuid,uuid,text) to authenticated;
+
+-- Integration deduplication is server-only. Browser roles cannot read or write these event identifiers.
+create table public.webhook_events (
+ organization_id uuid not null references public.organizations(id), provider text not null, event_id text not null,
+ created_at timestamptz not null default now(), primary key(organization_id,provider,event_id)
+);
+alter table public.webhook_events enable row level security;
+revoke all on public.webhook_events from public,anon,authenticated;
+grant all on all tables in schema public to service_role;
+create index leads_normalized_phone on public.leads(organization_id,(regexp_replace(phone,'[^0-9]','','g'))) where deleted_at is null;
+
+create function public.ingest_whatsapp_message(org uuid,provider_message_id text,sender text,message_body text,received_at timestamptz)
+returns uuid language plpgsql security invoker set search_path = '' as $$
+declare lead uuid; conversation uuid; owner uuid; existing uuid;
+begin
+ if provider_message_id is null or length(provider_message_id) not between 1 and 250 or sender !~ '^[0-9]{8,15}$' or received_at is null or received_at>now()+interval '5 minutes' then raise exception 'Evento inválido'; end if;
+ perform pg_advisory_xact_lock(hashtextextended(org::text||sender,0));
+ select id into existing from public.messages where provider_id=provider_message_id;
+ if existing is not null then return existing; end if;
+ select id into lead from public.leads where organization_id=org and regexp_replace(phone,'[^0-9]','','g')=sender and deleted_at is null order by created_at limit 1;
+ if lead is null then
+  select user_id into owner from public.organization_members where organization_id=org order by case role when 'admin' then 0 when 'manager' then 1 else 2 end,created_at limit 1;
+  if owner is null then raise exception 'Organização sem responsável'; end if;
+  insert into public.leads(organization_id,owner_id,name,company,phone,attribution,last_interaction)
+  values(org,owner,'Contato '||right(sender,4),'Não informado',sender,jsonb_build_object('channel','Origem desconhecida','firstTouch',received_at,'lastTouch',received_at,'method','Nenhum','evidence','Mensagem recebida pelo WhatsApp sem evidência técnica de origem.','confidence','nenhuma'),received_at) returning id into lead;
+ end if;
+ insert into public.conversations(organization_id,lead_id) values(org,lead) on conflict(organization_id,lead_id) do update set lead_id=excluded.lead_id returning id into conversation;
+ insert into public.messages(organization_id,lead_id,conversation_id,direction,body,status,provider_id,created_at) values(org,lead,conversation,'in',message_body,'received',provider_message_id,received_at) returning id into existing;
+ update public.conversations set unread=unread+1 where id=conversation;
+ update public.leads set last_interaction=greatest(last_interaction,received_at),attribution=jsonb_set(attribution,'{lastTouch}',to_jsonb(greatest(last_interaction,received_at))),updated_at=now() where id=lead;
+ return existing;
+end $$;
+revoke all on function public.ingest_whatsapp_message(uuid,text,text,text,timestamptz) from public,anon,authenticated;
+grant execute on function public.ingest_whatsapp_message(uuid,text,text,text,timestamptz) to service_role;
+create function public.update_whatsapp_status(org uuid,provider_message_id text,next_status text) returns void language plpgsql security invoker set search_path = '' as $$
+begin
+ if next_status not in ('sent','delivered','read','failed') then return; end if;
+ update public.messages set status=next_status where organization_id=org and provider_id=provider_message_id and direction='out'
+ and (next_status='failed' and status='sent' or next_status='delivered' and status in ('sent','failed') or next_status='read' and status in ('sent','delivered','failed'));
+end $$;
+revoke all on function public.update_whatsapp_status(uuid,text,text) from public,anon,authenticated;
+grant execute on function public.update_whatsapp_status(uuid,text,text) to service_role;
+
+create function public.ingest_site_lead(org uuid,event_id text,payload jsonb) returns uuid language plpgsql security invoker set search_path = '' as $$
+declare lead uuid; owner uuid; normalized text; fresh boolean;
+begin
+ if event_id is null or length(event_id) not between 1 and 100 then raise exception 'Evento inválido'; end if;
+ normalized:=regexp_replace(payload->>'phone','[^0-9]','','g');
+ if normalized is null or normalized !~ '^[0-9]{8,15}$' then raise exception 'Telefone inválido'; end if;
+ perform pg_advisory_xact_lock(hashtextextended(org::text||normalized,0));
+ insert into public.webhook_events(organization_id,provider,event_id) values(org,'site',event_id) on conflict do nothing;
+ fresh:=found;
+ select id into lead from public.leads where organization_id=org and regexp_replace(phone,'[^0-9]','','g')=normalized and deleted_at is null order by created_at limit 1;
+ if not fresh then return lead; end if;
+ if lead is null then
+  select user_id into owner from public.organization_members where organization_id=org order by case role when 'admin' then 0 when 'manager' then 1 else 2 end,created_at limit 1;
+  if owner is null then raise exception 'Organização sem responsável'; end if;
+  insert into public.leads(organization_id,owner_id,name,company,phone,email,service,source,attribution)
+  values(org,owner,payload->>'name',payload->>'company',normalized,coalesce(payload->>'email',''),coalesce(payload->>'service',''),coalesce(payload->>'source','unknown'),payload->'attribution') returning id into lead;
+ else
+  update public.leads set attribution=jsonb_set(attribution,'{lastTouch}',to_jsonb(now())),last_interaction=now(),updated_at=now() where id=lead;
+ end if;
+ return lead;
+end $$;
+revoke all on function public.ingest_site_lead(uuid,text,jsonb) from public,anon,authenticated;
+grant execute on function public.ingest_site_lead(uuid,text,jsonb) to service_role;

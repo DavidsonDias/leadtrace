@@ -1,5 +1,5 @@
 /* Cache public assets only. HTML, API requests and CRM data never enter Cache Storage. */
-const VERSION = "leadtrace-public-v1";
+const VERSION = "leadtrace-public-v2";
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(VERSION).then((cache) => cache.addAll(["/offline.html", "/icon.svg"])),
@@ -45,4 +45,8 @@ self.addEventListener("fetch", (event) => {
         }),
     ),
   );
+});
+
+self.addEventListener("message", (event) => {
+  if (event.data?.type === "SKIP_WAITING") self.skipWaiting();
 });
