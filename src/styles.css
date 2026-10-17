@@ -110,34 +110,61 @@
   --src-unknown: oklch(0.6 0.03 257);
 
   --gradient-brand: linear-gradient(135deg, var(--electric), var(--teal) 60%, var(--mint));
-  --gradient-glow: radial-gradient(60% 60% at 50% 0%, color-mix(in oklab, var(--teal) 22%, transparent), transparent 70%);
+  --gradient-glow: radial-gradient(
+    60% 60% at 50% 0%,
+    color-mix(in oklab, var(--teal) 22%, transparent),
+    transparent 70%
+  );
   --shadow-elegant: 0 24px 60px -24px color-mix(in oklab, var(--teal) 35%, transparent);
-  --shadow-card: 0 1px 0 0 color-mix(in oklab, var(--foreground) 5%, transparent) inset, 0 10px 30px -15px oklch(0 0 0 / 0.6);
+  --shadow-card:
+    0 1px 0 0 color-mix(in oklab, var(--foreground) 5%, transparent) inset,
+    0 10px 30px -15px oklch(0 0 0 / 0.6);
 }
 
 @layer base {
-  * { border-color: var(--color-border); }
-  html { color-scheme: dark; }
+  * {
+    border-color: var(--color-border);
+  }
+  html {
+    color-scheme: dark;
+  }
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
   }
-  h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.02em; }
-  :focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
 }
 
-@utility bg-brand { background-image: var(--gradient-brand); }
+@utility bg-brand {
+  background-image: var(--gradient-brand);
+}
 @utility text-brand {
   background-image: var(--gradient-brand);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
-@utility bg-glow { background-image: var(--gradient-glow); }
-@utility shadow-elegant { box-shadow: var(--shadow-elegant); }
-@utility shadow-card { box-shadow: var(--shadow-card); }
+@utility bg-glow {
+  background-image: var(--gradient-glow);
+}
+@utility shadow-elegant {
+  box-shadow: var(--shadow-elegant);
+}
+@utility shadow-card {
+  box-shadow: var(--shadow-card);
+}
 @utility bg-grid {
   background-image:
     linear-gradient(color-mix(in oklab, var(--border) 45%, transparent) 1px, transparent 1px),
@@ -149,10 +176,70 @@
   background: color-mix(in oklab, var(--c) 14%, transparent);
   border: 1px solid color-mix(in oklab, var(--c) 32%, transparent);
 }
-@utility origin-dot { background: var(--c); }
-@utility animate-float { animation: float 6s ease-in-out infinite; }
+@utility origin-dot {
+  background: var(--c);
+}
+@utility animate-float {
+  animation: float 6s ease-in-out infinite;
+}
 
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --background: #f4f7fb;
+  --foreground: #0d1828;
+  --card: #ffffff;
+  --card-foreground: #0d1828;
+  --popover: #ffffff;
+  --popover-foreground: #0d1828;
+  --primary: #087d6c;
+  --primary-foreground: #ffffff;
+  --secondary: #e8eef5;
+  --secondary-foreground: #142235;
+  --muted: #e8eef5;
+  --muted-foreground: #526277;
+  --accent: #dde8f2;
+  --accent-foreground: #0d1828;
+  --border: #c8d4e2;
+  --input: #b6c5d7;
+  --ring: #087d6c;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #0d1828;
+  --sidebar-accent: #e8eef5;
+  --sidebar-border: #c8d4e2;
+  --warning: #986000;
+  --destructive: #c22f35;
+  --success: #087d56;
+  --shadow-card: 0 4px 16px -8px #0d182830;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+:root[data-theme="light"] {
+  --src-ads: #2158b7;
+  --src-organic: #15723b;
+  --src-gbp: #946000;
+  --src-insta: #ac266a;
+  --src-fb: #305ab1;
+  --src-wa: #167538;
+  --src-site: #087d6c;
+  --src-ref: #7e640b;
+  --src-ai: #7d36a5;
+  --src-other: #526277;
+  --src-unknown: #526277;
 }

@@ -1,5 +1,7 @@
 # LeadTrace
 
+Documentação atual do MVP, execução, testes e pendências: [docs/MVP.md](docs/MVP.md).
+
 LEADTRACE CRM — MASTER DEVELOPMENT PROMPT v2.0
 
 Enterprise MVP | Powered by SevenDevX
