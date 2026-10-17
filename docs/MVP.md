@@ -96,6 +96,7 @@ Critérios ainda não homologados: WCAG 2.2 AA completa, instalação PWA em apa
 - TypeScript estrito: aprovado, sem erros.
 - Build de produção: aprovado.
 - ESLint dos arquivos TypeScript alterados: sem erros; um aviso de Fast Refresh no arquivo de provider/hook já compartilhado.
+- Chromium desktop: movimentação persistente de pipeline, proposta correspondente e desqualificação com motivo obrigatório, sem erros JavaScript.
 - Chromium desktop e viewport móvel 390 × 844: edição persistida após reload, tema claro e navegação para Origem, Propostas e Configurações; sem erros JavaScript.
 
 Esses resultados não equivalem à homologação das integrações de produção.
