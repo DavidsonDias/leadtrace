@@ -376,3 +376,6 @@ begin
 end $$;
 revoke all on function public.ingest_site_lead(uuid,text,jsonb) from public,anon,authenticated;
 grant execute on function public.ingest_site_lead(uuid,text,jsonb) to service_role;
+
+-- Explicit service-only policy; browser roles retain no grants on integration deduplication.
+create policy ingestion_service_only on public.webhook_events for all to service_role using (true) with check (true);

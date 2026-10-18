@@ -4,7 +4,7 @@ import { AuthLayout } from "@/components/brand/AuthLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { authConfigured, authError, getSupabase } from "@/lib/backend/client";
+import { recoveryConfigured, authError, getSupabase } from "@/lib/backend/client";
 export const Route = createFileRoute("/forgot-password")({
   head: () => ({
     meta: [
@@ -24,7 +24,7 @@ function Forgot() {
       <p className="mt-1 text-sm text-muted-foreground">
         Informe seu e-mail para receber o link de redefinição.
       </p>
-      {!authConfigured ? (
+      {!recoveryConfigured ? (
         <p role="status" className="mt-6 text-sm">
           Recuperação de senha ainda não configurada neste ambiente. Nenhum e-mail será enviado.
         </p>

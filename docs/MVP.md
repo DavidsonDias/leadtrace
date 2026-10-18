@@ -49,7 +49,7 @@ As telas compartilhadas estão em `src/components/pages`. `src/lib/crm/context.t
 
 `metrics.ts` concentra filtros/indicadores/alertas. “Hoje” começa à meia-noite local; períodos personalizados incluem a data final; comentários internos não alteram o último contato; alertas de proposta consideram a data de envio. `transitions.ts` valida alterações demonstrativas de propostas; a produção usa a RPC transacional `crm_command`.
 
-A migration em `supabase/migrations` cria 18 tabelas, índices, relações por organização, RLS, histórico, auditoria e ingestão deduplicada. As políticas foram exercitadas em Postgres local via PGlite. O banco remoto ainda precisa ser criado/configurado; não foi aplicado em projetos de outros sistemas. A modelagem e a ativação estão em [PRODUCTION.md](PRODUCTION.md).
+A migration em `supabase/migrations` cria 17 tabelas, índices, relações por organização, RLS, histórico, auditoria e ingestão deduplicada. As políticas foram exercitadas em Postgres local via PGlite. A opção isolada foi instalada no banco SevenDevX após aprovação do proprietário; os objetos dos outros sistemas foram preservados. A modelagem e a ativação estão em [PRODUCTION.md](PRODUCTION.md).
 
 ## PWA, SEO e governança
 
@@ -61,11 +61,11 @@ Secrets não entram no frontend. Auth utiliza PKCE e `getUser`; permissões fica
 
 ## Validação
 
-Nesta entrega: 47 testes automatizados de regras, persistência, banco/RLS, auth e adaptadores; cinco testes de navegador para edição persistente, pipeline/proposta/desqualificação, navegação móvel/tema, mensagens simuladas e separação do acesso real. TypeScript, build e checagem dos adaptadores Deno também executados. A CI roda a suíte e os testes Playwright.
+Nesta entrega: 48 testes automatizados de regras, persistência, banco/RLS, auth e adaptadores; cinco testes de navegador para edição persistente, pipeline/proposta/desqualificação, navegação móvel/tema, mensagens simuladas e separação do acesso real. TypeScript, build e checagem dos adaptadores Deno também executados. A CI roda a suíte e os testes Playwright.
 
 ## Próximas dependências de ativação
 
-- Projeto Supabase dedicado, variáveis públicas, migrations e conta administrativa.
+- Conferência final da publicação com o banco isolado instalado e conta administrativa vinculada.
 - Provedor Google e e-mails de recuperação configurados/homologados com contas reais.
 - Credenciais Meta, número, webhook, templates e fila de envio antes de liberar saída na inbox operacional.
 - Backend do site conectado ao endpoint de captura com chave privada, consentimento e proteção contra abuso.
@@ -74,3 +74,5 @@ Nesta entrega: 47 testes automatizados de regras, persistência, banco/RLS, auth
 Essas dependências são externas. Os adaptadores estão preparados e testados localmente, mas não são apresentados como integrações conectadas.
 
 A cotação de um novo projeto na SevenDevX é US$ 10/mês; não foi criado sob a condição de custo adicional zero. A alternativa de schema isolado no projeto existente está preparada e testada, aguardando escolha explícita. Detalhes em [PRODUCTION.md](PRODUCTION.md).
+
+Estado da instalação e validações remotas: [ACTIVATION.md](ACTIVATION.md).

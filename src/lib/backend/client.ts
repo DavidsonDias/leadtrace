@@ -3,7 +3,10 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 export const authConfigured = Boolean(
   import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
 );
-export const googleConfigured = import.meta.env.VITE_GOOGLE_OAUTH_ENABLED === "true";
+export const authRedirectsConfigured = import.meta.env.VITE_AUTH_REDIRECTS_CONFIGURED === "true";
+export const recoveryConfigured = authConfigured && authRedirectsConfigured;
+export const googleConfigured =
+  authRedirectsConfigured && import.meta.env.VITE_GOOGLE_OAUTH_ENABLED === "true";
 let browserClient: SupabaseClient | undefined;
 /** Browser-only singleton. Never create a shared server auth client or accept a service-role key. */
 export function getSupabase(): SupabaseClient {

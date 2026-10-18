@@ -10,9 +10,9 @@ As telas de dashboard, leads, origem, pipeline, propostas, follow-up e inbox sã
 
 ## Banco dedicado
 
-Os projetos acessíveis na sessão são de outros sistemas. Nenhum foi alterado. A migration em `supabase/migrations` deve ser aplicada em um projeto dedicado ao LeadTrace.
+O proprietário aprovou a instalação em schemas exclusivos no projeto SevenDevX existente. A alternativa isolada foi aplicada; as tabelas e políticas dos outros sistemas foram preservadas. A migration em `supabase/migrations` permanece como opção para um futuro projeto dedicado. Estado da ativação em [ACTIVATION.md](ACTIVATION.md).
 
-A migration contém 18 tabelas:
+A migration contém 17 tabelas:
 
 - organizations, profiles, organization_members;
 - leads, lead_sources, attribution_events;
@@ -30,7 +30,7 @@ As únicas funções privilegiadas são auxiliares internos no schema `private`,
 ## Ativar sem compartilhar secrets no chat
 
 1. Criar/selecionar o projeto dedicado e verificar seu custo antes de contratar qualquer recurso pago.
-2. Aplicar a migration completa em um banco vazio pelo SQL Editor ou pela CLI Supabase vinculada ao projeto correto. Na CLI, conferir a identidade e usar `supabase db push --dry-run` antes de aplicar. A migration já foi executada nos testes locais Postgres/PGlite; ainda não foi aplicada em um projeto remoto.
+2. Aplicar a migration completa em um banco vazio pelo SQL Editor ou pela CLI Supabase vinculada ao projeto correto. Na CLI, conferir a identidade e usar `supabase db push --dry-run` antes de aplicar. A migration já foi executada nos testes locais Postgres/PGlite; a opção isolada já foi aplicada e validada no projeto remoto.
 3. Criar ou convidar a conta administrativa no painel de Auth. Para o piloto, manter cadastro público desabilitado. Após existir o usuário em `auth.users`, adaptar e executar `supabase/bootstrap.sql`. O script não cria senhas e não envia e-mails.
 4. Configurar as variáveis públicas da `.env.example` no ambiente de destino. Usar uma publishable key; nunca uma chave secret/service_role em `VITE_*`.
 5. No Auth, definir a URL pública e permitir `/auth/callback` e `/auth/callback?next=reset-password` nas URLs de retorno. Para desenvolvimento: mesma origem/porta exibida pelo Vite. No Google, cadastrar o callback Supabase indicado no painel e habilitar `VITE_GOOGLE_OAUTH_ENABLED=true` somente após configurar o provedor.
@@ -58,7 +58,7 @@ Deploy, após configurar o projeto/secrets:
 supabase functions deploy whatsapp-webhook
 ```
 
-Cadastrar a URL gerada no painel Meta, usar o verify token configurado e testar mensagens/eventos reais. Nenhuma função foi publicada e nenhuma mensagem real foi enviada nesta entrega.
+Cadastrar a URL gerada no painel Meta, usar o verify token configurado e testar mensagens/eventos reais. Nenhuma Edge Function foi publicada e nenhuma mensagem real foi enviada nesta entrega.
 
 ## Captura de origem do site
 
@@ -87,7 +87,7 @@ O primeiro contato mantém a origem inicial; capturas posteriores atualizam last
 
 O repositório está ligado ao projeto Vercel `leadtrace`, equipe `davidson-dias-projects`, Node 24. A URL estável observada é `https://leadtrace-two.vercel.app`. O Git integra preview por branch e produção na `main`. O preset é escolhido pelo ambiente da plataforma; o build local padrão do plugin Lovable produz saída Nitro/Cloudflare.
 
-A inspeção encontrou nenhuma variável de ambiente cadastrada no projeto Vercel. Por isso, a publicação mantém o acesso demo ativo e o acesso real explicitamente indisponível até configurar o projeto Supabase. Não usar chaves dos projetos de outros sistemas para contornar essa etapa.
+A produção recebe a configuração pública do projeto selecionado pelo proprietário, usando schema `leadtrace`. Preview e CI permanecem isolados da produção. A demo continua acessível separadamente; não usar seu armazenamento para dados reais.
 
 ## Testar
 
@@ -123,4 +123,4 @@ Para essa opção, após a escolha do projeto:
 5. Configurar `VITE_SUPABASE_DB_SCHEMA=leadtrace` no frontend e `LEADTRACE_DB_SCHEMA=leadtrace` nos adaptadores. As keys/URL serão do projeto selecionado; continuam valendo todas as políticas de tenant e responsável.
 6. Acrescentar as URLs de retorno LeadTrace ao Auth sem substituir o Site URL, os provedores ou os templates usados pelos outros aplicativos. Validar as identidades compartilhadas e os dois aplicativos antes de liberar acesso.
 
-A preparação dessa opção não autoriza sua aplicação. Nenhum schema, usuário, grant ou configuração do projeto SevenDevX existente foi alterado nesta entrega.
+O proprietário autorizou a aplicação dessa opção. Foram criados somente os objetos LeadTrace e acrescentado seu schema à lista de exposição da API. Tabelas, políticas e grants em `public` foram preservados. Consulte [ACTIVATION.md](ACTIVATION.md).
