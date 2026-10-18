@@ -11,6 +11,17 @@ describe("production auth configuration", () => {
     expect(authConfigured).toBe(false);
     expect(() => getSupabase()).toThrow("não configurada");
   });
+  it("blocks recovery and Google until shared Auth redirect URLs are configured", async () => {
+    vi.stubEnv("VITE_SUPABASE_URL", "https://example.supabase.co");
+    vi.stubEnv("VITE_SUPABASE_PUBLISHABLE_KEY", "sb_publishable_test");
+    vi.stubEnv("VITE_AUTH_REDIRECTS_CONFIGURED", "false");
+    vi.stubEnv("VITE_GOOGLE_OAUTH_ENABLED", "true");
+    const { authConfigured, recoveryConfigured, googleConfigured } =
+      await import("@/lib/backend/client");
+    expect(authConfigured).toBe(true);
+    expect(recoveryConfigured).toBe(false);
+    expect(googleConfigured).toBe(false);
+  });
   it("rejects a private key before constructing a browser client", async () => {
     vi.stubEnv("VITE_SUPABASE_URL", "https://example.supabase.co");
     vi.stubEnv("VITE_SUPABASE_PUBLISHABLE_KEY", "sb_secret_never-use-in-browser");
