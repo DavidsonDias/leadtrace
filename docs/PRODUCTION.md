@@ -10,7 +10,7 @@ As telas de dashboard, leads, origem, pipeline, propostas, follow-up e inbox sã
 
 ## Banco dedicado
 
-O proprietário aprovou a instalação em schemas exclusivos no projeto SevenDevX existente. A alternativa isolada foi aplicada; as tabelas e políticas dos outros sistemas foram preservadas. A migration em `supabase/migrations` permanece como opção para um futuro projeto dedicado. Estado da ativação em [ACTIVATION.md](ACTIVATION.md).
+A ativação no projeto SevenDevX existente foi revertida a pedido do proprietário. Não reutilizar esse projeto. Produção está desconectada até existir um projeto exclusivo aprovado. Estado em [ACTIVATION.md](ACTIVATION.md).
 
 A migration contém 17 tabelas:
 
@@ -30,7 +30,7 @@ As únicas funções privilegiadas são auxiliares internos no schema `private`,
 ## Ativar sem compartilhar secrets no chat
 
 1. Criar/selecionar o projeto dedicado e verificar seu custo antes de contratar qualquer recurso pago.
-2. Aplicar a migration completa em um banco vazio pelo SQL Editor ou pela CLI Supabase vinculada ao projeto correto. Na CLI, conferir a identidade e usar `supabase db push --dry-run` antes de aplicar. A migration já foi executada nos testes locais Postgres/PGlite; a opção isolada já foi aplicada e validada no projeto remoto.
+2. Aplicar a migration completa em um banco vazio pelo SQL Editor ou pela CLI Supabase vinculada ao projeto correto. Na CLI, conferir a identidade e usar `supabase db push --dry-run` antes de aplicar. A migration já foi executada nos testes locais Postgres/PGlite; a ativação remota foi posteriormente revertida.
 3. Criar ou convidar a conta administrativa no painel de Auth. Para o piloto, manter cadastro público desabilitado. Após existir o usuário em `auth.users`, adaptar e executar `supabase/bootstrap.sql`. O script não cria senhas e não envia e-mails.
 4. Configurar as variáveis públicas da `.env.example` no ambiente de destino. Usar uma publishable key; nunca uma chave secret/service_role em `VITE_*`.
 5. No Auth, definir a URL pública e permitir `/auth/callback` e `/auth/callback?next=reset-password` nas URLs de retorno. Para desenvolvimento: mesma origem/porta exibida pelo Vite. No Google, cadastrar o callback Supabase indicado no painel e habilitar `VITE_GOOGLE_OAUTH_ENABLED=true` somente após configurar o provedor.
@@ -110,17 +110,4 @@ Limites de homologação: login e recuperação com contas reais, Google, Meta, 
 
 A cotação do Supabase para um projeto adicional na organização SevenDevX foi **US$ 10/mês**. O usuário autorizou criação somente sem custo adicional; nenhum projeto foi criado e nenhum custo foi confirmado.
 
-Como alternativa técnica, o repositório suporta um schema `leadtrace` no projeto SevenDevX existente. Essa alternativa precisa ser escolhida explicitamente antes de qualquer alteração externa: compartilha a infraestrutura, o serviço Auth, as identidades e os limites do projeto existente. Uma alteração de senha de uma identidade compartilhada vale para todos os aplicativos que usam essa mesma identidade. Não cria nova instância nem novo custo de compute de projeto; consumo continua sujeito aos limites e plano já existentes.
-
-`npm run db:isolated` gera `supabase/isolated-schema.sql` e `supabase/bootstrap-isolated.sql`. A geração preserva o papel PostgreSQL `PUBLIC` e muda apenas os namespaces dos objetos/grants para `leadtrace` e `leadtrace_private`. Um teste executa esse SQL com um produto existente em `public`, confirma que dados/políticas/grants desse produto não mudam e exerce o CRM no schema isolado.
-
-Para essa opção, após a escolha do projeto:
-
-1. Verificar que os schemas `leadtrace` e `leadtrace_private` ainda não existem e revisar os limites do projeto.
-2. Aplicar **somente** `supabase/isolated-schema.sql`. Não executar a migration de schema público nesse projeto compartilhado e não usar `db push` com as migrations públicas.
-3. Adicionar apenas `leadtrace` aos schemas expostos pela Data API, preservando os schemas já configurados. **Nunca expor `leadtrace_private`.**
-4. Usar `supabase/bootstrap-isolated.sql` para o vínculo inicial.
-5. Configurar `VITE_SUPABASE_DB_SCHEMA=leadtrace` no frontend e `LEADTRACE_DB_SCHEMA=leadtrace` nos adaptadores. As keys/URL serão do projeto selecionado; continuam valendo todas as políticas de tenant e responsável.
-6. Acrescentar as URLs de retorno LeadTrace ao Auth sem substituir o Site URL, os provedores ou os templates usados pelos outros aplicativos. Validar as identidades compartilhadas e os dois aplicativos antes de liberar acesso.
-
-O proprietário autorizou a aplicação dessa opção. Foram criados somente os objetos LeadTrace e acrescentado seu schema à lista de exposição da API. Tabelas, políticas e grants em `public` foram preservados. Consulte [ACTIVATION.md](ACTIVATION.md).
+O suporte técnico a schema isolado permanece versionado, mas **não deve ser aplicado ao projeto SevenDevX existente**. A ativação anterior foi revertida; somente um projeto exclusivo poderá ser utilizado após aprovação específica.

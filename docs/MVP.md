@@ -49,7 +49,7 @@ As telas compartilhadas estão em `src/components/pages`. `src/lib/crm/context.t
 
 `metrics.ts` concentra filtros/indicadores/alertas. “Hoje” começa à meia-noite local; períodos personalizados incluem a data final; comentários internos não alteram o último contato; alertas de proposta consideram a data de envio. `transitions.ts` valida alterações demonstrativas de propostas; a produção usa a RPC transacional `crm_command`.
 
-A migration em `supabase/migrations` cria 17 tabelas, índices, relações por organização, RLS, histórico, auditoria e ingestão deduplicada. As políticas foram exercitadas em Postgres local via PGlite. A opção isolada foi instalada no banco SevenDevX após aprovação do proprietário; os objetos dos outros sistemas foram preservados. A modelagem e a ativação estão em [PRODUCTION.md](PRODUCTION.md).
+A migration em `supabase/migrations` cria 17 tabelas, índices, relações por organização, RLS, histórico, auditoria e ingestão deduplicada. As políticas foram exercitadas em Postgres local via PGlite. A ativação no banco SevenDevX foi revertida por solicitação do proprietário; o frontend está desconectado desse projeto. A modelagem e a ativação estão em [PRODUCTION.md](PRODUCTION.md).
 
 ## PWA, SEO e governança
 
@@ -73,6 +73,6 @@ Nesta entrega: 48 testes automatizados de regras, persistência, banco/RLS, auth
 
 Essas dependências são externas. Os adaptadores estão preparados e testados localmente, mas não são apresentados como integrações conectadas.
 
-A cotação de um novo projeto na SevenDevX é US$ 10/mês; não foi criado sob a condição de custo adicional zero. A alternativa de schema isolado no projeto existente está preparada e testada, aguardando escolha explícita. Detalhes em [PRODUCTION.md](PRODUCTION.md).
+A cotação de um novo projeto na SevenDevX é US$ 10/mês; não foi criado sob a condição de custo adicional zero. Não reutilizar o projeto existente. O backend depende de um projeto exclusivo aprovado. Detalhes em [PRODUCTION.md](PRODUCTION.md).
 
 Estado da instalação e validações remotas: [ACTIVATION.md](ACTIVATION.md).
