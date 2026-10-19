@@ -8,7 +8,19 @@ import { Deals } from "@/components/pages/Deals";
 import { FollowUp } from "@/components/pages/FollowUp";
 import { Inbox } from "@/components/pages/Inbox";
 import { WorkspaceSettings } from "@/components/workspace/Settings";
+import { privateRouteMeta } from "@/lib/route-meta";
+const MODULE_TITLES: Record<string, string> = {
+  dashboard: "Dashboard da organização",
+  leads: "Leads da organização",
+  pipeline: "Pipeline da organização",
+  origin: "Origem dos leads da organização",
+  deals: "Propostas da organização",
+  followup: "Follow-up da organização",
+  inbox: "Inbox da organização",
+  settings: "Configurações da organização",
+};
 export const Route = createFileRoute("/workspace/$module")({
+  head: ({ params }) => privateRouteMeta(MODULE_TITLES[params.module] ?? "Módulo indisponível", "Gestão comercial no ambiente de trabalho LeadTrace CRM."),
   validateSearch: z.object({ lead: z.string().uuid().optional() }),
   component: Page,
 });

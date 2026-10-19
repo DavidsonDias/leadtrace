@@ -3,15 +3,11 @@ import { useEffect } from "react";
 import { z } from "zod";
 import { useAuth } from "@/lib/backend/auth-context";
 import { AuthLayout } from "@/components/brand/AuthLayout";
+import { privateRouteMeta } from "@/lib/route-meta";
 export const Route = createFileRoute("/auth/callback")({
   ssr: false,
   validateSearch: z.object({ next: z.enum(["workspace", "reset-password"]).optional() }),
-  head: () => ({
-    meta: [
-      { title: "Autenticando — LeadTrace CRM" },
-      { name: "robots", content: "noindex, nofollow" },
-    ],
-  }),
+  head: () => privateRouteMeta("Autenticando", "Validação do acesso e retorno seguro à plataforma LeadTrace CRM."),
   component: Callback,
 });
 function Callback() {
