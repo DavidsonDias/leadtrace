@@ -19,4 +19,4 @@ Não foi medido um novo score Lighthouse ou Core Web Vitals em tráfego real. As
 
 ## Reprodutibilidade do CI
 
-O runner passou a fornecer npm 11.19.0, que rejeitou o lockfile existente ao resolver peers opcionais. A checagem com o npm 11.9.0 já declarado em `packageManager` aceitou o mesmo lockfile. O workflow fixa essa versão da ferramenta antes de `npm ci`; não adiciona dependências ao produto nem altera o lockfile.
+O runner passou a fornecer npm 11.19.0, que rejeitou o lockfile existente ao resolver peers opcionais. Uma instalação limpa com o npm 11.9.0 já declarado em `packageManager` aceitou o mesmo lockfile (535 pacotes). O workflow fixa essa versão da ferramenta antes de `npm ci`; não adiciona dependências ao produto nem altera o lockfile.
