@@ -7,14 +7,10 @@ import { LiveCrmProvider } from "@/lib/backend/live-store";
 import { LeadSheet } from "@/components/crm/LeadSheet";
 import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
+import { privateRouteMeta } from "@/lib/route-meta";
 export const Route = createFileRoute("/workspace")({
   ssr: false,
-  head: () => ({
-    meta: [
-      { title: "Plataforma — LeadTrace CRM" },
-      { name: "robots", content: "noindex, nofollow" },
-    ],
-  }),
+  head: () => privateRouteMeta("Plataforma", "Ambiente de trabalho da organização no LeadTrace CRM."),
   component: Workspace,
 });
 const modules = [

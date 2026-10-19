@@ -20,19 +20,11 @@ import { LeadSheet } from "@/components/crm/LeadSheet";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { privateRouteMeta } from "@/lib/route-meta";
 
 export const Route = createFileRoute("/app")({
   ssr: false,
-  head: () => ({
-    meta: [
-      { title: "Demonstração — LeadTrace CRM" },
-      {
-        name: "description",
-        content: "Ambiente demonstrativo do LeadTrace CRM com dados fictícios.",
-      },
-      { name: "robots", content: "noindex, nofollow" },
-    ],
-  }),
+  head: () => privateRouteMeta("Demonstração", "Ambiente demonstrativo do LeadTrace CRM com dados fictícios."),
   component: AppLayout,
 });
 

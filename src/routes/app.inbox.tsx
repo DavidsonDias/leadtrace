@@ -1,7 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
 import { Inbox } from "@/components/pages/Inbox";
+import { privateRouteMeta } from "@/lib/route-meta";
 export const Route = createFileRoute("/app/inbox")({
+  head: () => privateRouteMeta("Inbox demonstrativa", "Conversas simuladas e histórico de atendimento no LeadTrace CRM; nenhuma mensagem real é enviada."),
   validateSearch: z.object({ lead: z.string().optional() }),
   component: Page,
 });

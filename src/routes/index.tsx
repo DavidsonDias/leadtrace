@@ -40,8 +40,6 @@ export const Route = createFileRoute("/")({
       { property: "og:type", content: "website" },
       { property: "og:url", content: SITE_URL + "/" },
       { property: "og:locale", content: "pt_BR" },
-      { property: "og:image", content: SITE_URL + "/og-leadtrace.png" },
-      { name: "twitter:image", content: SITE_URL + "/og-leadtrace.png" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
     scripts: [
