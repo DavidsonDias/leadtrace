@@ -1725,3 +1725,10 @@
     scroll-behavior: smooth;
   }
 }
+
+/* Keep CTA labels legible across the entire accent and in both themes. */
+.lp-root .bg-brand {
+  background-image: linear-gradient(110deg, #74f5dd, #19d8bb);
+  color: #0d1828;
+  box-shadow: none;
+}
