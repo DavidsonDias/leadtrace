@@ -1,7 +1,11 @@
 # LeadTrace — próximas etapas
 
-- [ ] Revisar e validar os fluxos existentes da demonstração.
-- [ ] Concluir ajustes identificados na revisão, incluindo metadados das páginas.
-- [ ] Solicitar autorização para um ambiente exclusivo de produção; nunca reutilizar o projeto SevenDevX.
-- [ ] Validar testes e experiência no navegador.
-- [ ] Registrar bloqueios externos de login, WhatsApp e captura no site sem simular conexões.
+- [x] Revisar e validar os fluxos existentes da demonstração.
+- [x] Concluir metadados das páginas e remover imagem de compartilhamento inexistente.
+- [x] Criar ambiente Lovable Cloud exclusivo autorizado; não reutilizar o projeto SevenDevX.
+- [x] Validar 48 testes e os fluxos de leads, pipeline, propostas, Inbox e navegação mobile no navegador.
+- [x] Registrar estado e verificações em docs/ACTIVATION.md.
+- [ ] Ativar contas, organização e persistência real — depende da definição obrigatória dos dados de perfil antes de implementar autenticação.
+- [ ] Integrar WhatsApp — depende da conexão Business, telefone e configuração Meta do proprietário.
+- [ ] Integrar captura no site — depende de autorização e acesso ao site do cliente.
+- [ ] Validar acessos reais e publicar — depende da configuração de contas e solicitação explícita de publicação.
