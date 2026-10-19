@@ -16,3 +16,7 @@ A página inicial preserva rotas, logotipo, tokens, assinatura SevenDevX e metad
 48 testes Vitest, TypeScript e build de produção aprovados. A suíte Playwright cobre os cinco fluxos existentes do CRM e quatro verificações novas da landing: evidência/teclado/troca de prévias/ausência de chamadas Supabase e de gravação demo; larguras de 390, 768 e 1440 px nos dois temas; menu móvel/Escape; preferência por movimento reduzido. Capturas locais de desktop e celular revisadas visualmente.
 
 Não foi medido um novo score Lighthouse ou Core Web Vitals em tráfego real. As prévias são de apresentação com dados fictícios, não screenshots de uma operação real. WhatsApp, autenticação real e backend dedicado mantêm suas pendências anteriores.
+
+## Reprodutibilidade do CI
+
+O runner passou a fornecer npm 11.19.0, que rejeitou o lockfile existente ao resolver peers opcionais. A checagem com o npm 11.9.0 já declarado em `packageManager` aceitou o mesmo lockfile. O workflow fixa essa versão da ferramenta antes de `npm ci`; não adiciona dependências ao produto nem altera o lockfile.

@@ -14,6 +14,8 @@ jobs:
         with:
           node-version: 24
           cache: npm
+      # Match packageManager: newer bundled npm changes optional-peer lock resolution.
+      - run: npm install --global npm@11.9.0 --ignore-scripts
       - run: npm ci --ignore-scripts
       - run: npm run db:isolated
       - run: git diff --exit-code -- supabase/isolated-schema.sql supabase/bootstrap-isolated.sql

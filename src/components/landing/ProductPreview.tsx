@@ -63,7 +63,7 @@ export function PipelinePreview({ compact = false }: { compact?: boolean }) {
                 <h4>{lead.company}</h4>
                 <p>{lead.name}</p>
                 <footer>
-                  <span>{money(lead.value ?? 0)}</span>
+                  <span>{lead.value === undefined ? "Sem estimativa" : money(lead.value)}</span>
                   <span className="lp-initials" title={lead.owner}>
                     {lead.owner
                       .split(" ")
