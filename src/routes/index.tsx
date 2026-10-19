@@ -1,22 +1,34 @@
+import { useEffect, useState } from "react";
 import { SITE_URL } from "@/lib/site";
-import { createSeed } from "@/lib/crm/seed";
-import { kpis } from "@/lib/crm/metrics";
-import { SOURCES, type SourceKey } from "@/lib/crm/types";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowRight,
+  ArrowUpRight,
   Bell,
-  Columns3,
+  Check,
+  ChevronRight,
   FileText,
-  MessagesSquare,
-  Radar,
+  Menu,
+  X,
   ShieldCheck,
   Smartphone,
-  Workflow,
+  Radar,
+  Columns3,
+  MessagesSquare,
 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
-import { OriginBadge } from "@/components/crm/OriginBadge";
+import {
+  ProductPreview,
+  PipelinePreview,
+  InboxPreview,
+  OriginChart,
+} from "@/components/landing/ProductPreview";
+import { presentation } from "@/components/landing/presentation";
+import { OriginJourney } from "@/components/landing/OriginJourney";
+import { PROPOSAL_STATUS } from "@/lib/crm/types";
+import { computeAlerts } from "@/lib/crm/metrics";
+import "@/components/landing/landing.css";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -62,316 +74,451 @@ export const Route = createFileRoute("/")({
   component: Landing,
 });
 
-const FEATURES = [
-  {
-    id: "inbox",
-    icon: MessagesSquare,
-    t: "Central de atendimento",
-    d: "Conversas em um só lugar, ligadas ao lead, com histórico, responsável e status. Preparado para a API oficial do WhatsApp Business.",
-  },
-  {
-    id: "origin",
-    icon: Radar,
-    t: "Inteligência de origem",
-    d: "UTMs, gclid, referrer e formulários viram evidência. Cada lead mostra de onde veio — e com qual grau de confiança.",
-  },
-  {
-    id: "pipeline",
-    icon: Columns3,
-    t: "Pipeline comercial",
-    d: "Kanban com arrastar e soltar, motivo de desqualificação, comentários e timeline completa.",
-  },
-  {
-    id: "deals",
-    icon: FileText,
-    t: "Gestão de propostas",
-    d: "Valor, status, data de envio e próximo acompanhamento de cada proposta, sem planilhas.",
-  },
-  {
-    id: "followup",
-    icon: Bell,
-    t: "Alertas e follow-up",
-    d: "Avisos de 7, 15 e 30 dias sem retorno e atividades vencidas, calculados a partir dos seus dados.",
-  },
-];
-
+const sections = [
+  ["funcionalidades", "Funcionalidades"],
+  ["como-funciona", "Como funciona"],
+  ["beneficios", "Benefícios"],
+] as const;
 function Landing() {
+  const [menu, setMenu] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const update = () => setScrolled(window.scrollY > 20);
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    return () => window.removeEventListener("scroll", update);
+  }, []);
+  useEffect(() => {
+    if (!menu) return;
+    const close = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setMenu(false);
+        document.getElementById("landing-menu-toggle")?.focus();
+      }
+    };
+    document.addEventListener("keydown", close);
+    return () => document.removeEventListener("keydown", close);
+  }, [menu]);
+  const demoAlerts = computeAlerts(presentation, Date.UTC(2026, 0, 1)).slice(0, 2);
   return (
-    <div className="min-h-screen overflow-x-hidden">
-      <header className="sticky top-0 z-30 border-b border-border/60 bg-background/80 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-          <Logo />
-          <nav className="hidden gap-6 text-sm text-muted-foreground md:flex" aria-label="Seções">
-            <a href="#funcionalidades" className="hover:text-foreground">
-              Funcionalidades
-            </a>
-            <a href="#como-funciona" className="hover:text-foreground">
-              Como funciona
-            </a>
-            <a href="#beneficios" className="hover:text-foreground">
-              Benefícios
-            </a>
+    <div className="lp-root">
+      <a className="lp-skip" href="#conteudo">
+        Ir para o conteúdo
+      </a>
+      <header className={`lp-header ${scrolled ? "lp-header-scrolled" : ""}`}>
+        <div className="lp-container lp-nav">
+          <Link to="/" aria-label="LeadTrace início">
+            <Logo />
+          </Link>
+          <nav className="lp-desktop-nav" aria-label="Seções">
+            {sections.map(([id, label]) => (
+              <a key={id} href={`#${id}`}>
+                {label}
+              </a>
+            ))}
           </nav>
-          <div className="flex gap-2">
-            <Button variant="ghost" size="sm" className="hidden sm:inline-flex" asChild>
-              <Link to="/login">Acessar plataforma</Link>
+          <div className="lp-nav-actions">
+            <Link to="/login" className="lp-signin">
+              Acessar plataforma <ArrowUpRight size={14} />
+            </Link>
+            <Button variant="hero" size="sm" asChild className="lp-desktop-cta">
+              <Link to="/app">
+                Explorar demonstração <ArrowRight />
+              </Link>
             </Button>
-            <Button variant="hero" size="sm" asChild>
-              <Link to="/app">Explorar demonstração</Link>
-            </Button>
+            <button
+              id="landing-menu-toggle"
+              className="lp-menu-toggle"
+              type="button"
+              aria-label={menu ? "Fechar menu" : "Abrir menu"}
+              aria-expanded={menu}
+              aria-controls="landing-mobile-menu"
+              onClick={() => setMenu(!menu)}
+            >
+              {menu ? <X /> : <Menu />}
+            </button>
           </div>
         </div>
+        {menu && (
+          <nav id="landing-mobile-menu" className="lp-mobile-nav" aria-label="Menu principal">
+            {sections.map(([id, label]) => (
+              <a key={id} href={`#${id}`} onClick={() => setMenu(false)}>
+                {label}
+                <ChevronRight size={16} />
+              </a>
+            ))}
+            <Link to="/login" onClick={() => setMenu(false)}>
+              Acessar plataforma <ArrowUpRight size={16} />
+            </Link>
+            <Link to="/app">
+              Explorar demonstração <ArrowRight size={16} />
+            </Link>
+          </nav>
+        )}
       </header>
-
-      <main>
-        <section className="relative">
-          <div className="pointer-events-none absolute inset-0 bg-grid opacity-40 [mask-image:radial-gradient(70%_60%_at_50%_0%,black,transparent)]" />
-          <div className="pointer-events-none absolute inset-0 bg-glow" />
-          <div className="relative mx-auto max-w-6xl px-4 pb-16 pt-16 text-center md:pt-24">
-            <p className="mx-auto mb-5 inline-flex rounded-full border border-border bg-card/60 px-3 py-1 text-xs text-muted-foreground">
-              CRM & Lead Intelligence Platform · by SevenDevX
-            </p>
-            <h1 className="mx-auto max-w-4xl font-display text-4xl font-extrabold leading-[1.05] md:text-6xl">
-              Cada lead tem uma história.{" "}
-              <span className="text-brand">Acompanhe cada oportunidade.</span>
-            </h1>
-            <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
-              Centralize conversas, descubra de onde vêm seus clientes e gerencie tudo em um CRM
-              inteligente.
-            </p>
-            <div className="mt-8 flex flex-wrap justify-center gap-3">
-              <Button variant="hero" size="lg" asChild>
-                <Link to="/app">
-                  Explorar demonstração <ArrowRight />
-                </Link>
-              </Button>
-              <Button variant="glass" size="lg" asChild>
-                <Link to="/login">Acessar plataforma</Link>
-              </Button>
+      <main id="conteudo">
+        <section className="lp-hero lp-container">
+          <div className="lp-hero-copy reveal-in">
+            <div>
+              <p className="lp-eyebrow">
+                <span className="lp-status-dot" />
+                LEAD INTELLIGENCE & RELATIONSHIP MANAGEMENT
+              </p>
+              <h1>
+                Cada lead tem
+                <br />
+                uma <em>origem.</em>
+                <br />
+                <span>
+                  Cada oportunidade,
+                  <br />
+                  um próximo passo.
+                </span>
+              </h1>
             </div>
-            <Mockup />
+            <div className="lp-hero-support">
+              <p>
+                Descubra de onde vêm seus contatos, centralize conversas e acompanhe cada
+                oportunidade em um CRM feito para transformar dados em decisões.
+              </p>
+              <div className="lp-hero-actions">
+                <Button variant="hero" size="lg" asChild>
+                  <Link to="/app">
+                    Explorar demonstração <ArrowUpRight />
+                  </Link>
+                </Button>
+                <a href="#origem" className="lp-text-link">
+                  Conhecer o LeadTrace <ArrowRight size={16} />
+                </a>
+              </div>
+              <p className="lp-tagline">Track every lead. Grow every opportunity.</p>
+              <div className="lp-hero-footnote">
+                <span>01 /</span> Da primeira interação à próxima decisão.
+              </div>
+            </div>
+          </div>
+          <ProductPreview />
+          <div className="lp-product-caption">
+            <p>
+              O seu comercial inteiro.
+              <br />
+              <strong>Uma visão conectada.</strong>
+            </p>
+            <span>Origem → Conversa → Oportunidade → Acompanhamento</span>
+            <a href="#origem" aria-label="Conhecer a inteligência de origem">
+              <ArrowRight size={22} />
+            </a>
           </div>
         </section>
-
-        <section id="funcionalidades" className="mx-auto max-w-6xl px-4 py-20">
-          <h2 className="text-center font-display text-3xl font-bold md:text-4xl">
-            Tudo o que o comercial precisa, nada além
-          </h2>
-          <p className="mx-auto mt-3 max-w-xl text-center text-muted-foreground">
-            Feito para equipes que recebem dezenas de leads por semana e não podem perder nenhum.
-          </p>
-          <div className="mt-12 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {FEATURES.map((f) => (
-              <article
-                key={f.id}
-                className="rounded-2xl border border-border bg-card p-6 shadow-card transition-transform hover:-translate-y-1"
-              >
-                <span className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                  <f.icon className="size-5" />
-                </span>
-                <h3 className="mt-4 text-lg font-semibold">{f.t}</h3>
-                <p className="mt-2 text-sm text-muted-foreground">{f.d}</p>
-              </article>
-            ))}
-            <article className="rounded-2xl border border-primary/40 bg-primary/5 p-6">
-              <h3 className="text-lg font-semibold">Origem sem achismo</h3>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Sem evidência técnica, o LeadTrace marca o lead como origem desconhecida — e
-                registra toda atribuição manual.
-              </p>
-              <div className="mt-4 flex flex-wrap gap-1.5">
-                <OriginBadge source="google_ads" />
-                <OriginBadge source="gbp" />
-                <OriginBadge source="instagram" />
-                <OriginBadge source="referral" />
-                <OriginBadge source="unknown" />
+        <section id="origem" className="lp-section lp-container">
+          <div className="lp-section-heading">
+            <div>
+              <p className="lp-eyebrow">01 — LEADTRACE ORIGIN</p>
+              <h2>
+                Saiba de onde vem
+                <br />
+                cada <em>oportunidade.</em>
+              </h2>
+            </div>
+            <p>
+              Não basta receber contatos. Entenda o caminho até a conversa, confira a evidência e
+              decida o próximo passo com contexto.
+            </p>
+          </div>
+          <OriginJourney />
+        </section>
+        <section id="funcionalidades" className="lp-section lp-container">
+          <div className="lp-section-heading">
+            <div>
+              <p className="lp-eyebrow">02 — UM COMERCIAL CONECTADO</p>
+              <h2>
+                Do primeiro “olá”
+                <br />à decisão final.
+              </h2>
+            </div>
+            <p>
+              Uma operação simples de acompanhar. Com as informações que importam, onde você precisa
+              delas.
+            </p>
+          </div>
+          <div className="lp-bento">
+            <article className="lp-feature lp-feature-origin">
+              <div className="lp-feature-heading">
+                <Radar size={22} />
+                <span>INTELIGÊNCIA DE ORIGEM</span>
               </div>
+              <h3>
+                Mais clareza sobre
+                <br />a origem dos contatos.
+              </h3>
+              <p>
+                Compare os canais da sua base. Sem evidência técnica, a origem permanece
+                desconhecida.
+              </p>
+              <OriginChart />
+              <Link to="/app/origin" className="lp-text-link">
+                Explorar origens <ArrowUpRight size={16} />
+              </Link>
+            </article>
+            <article className="lp-feature lp-feature-inbox">
+              <div className="lp-feature-heading">
+                <MessagesSquare size={22} />
+                <span>LEADTRACE INBOX</span>
+              </div>
+              <h3>
+                Todas as conversas.
+                <br />
+                Todo o contexto.
+              </h3>
+              <p>
+                Histórico, origem e responsável juntos. Prévia fictícia; WhatsApp oficial ainda
+                depende de configuração.
+              </p>
+              <InboxPreview />
+              <Link to="/app/inbox" className="lp-text-link">
+                Abrir inbox demonstrativa <ArrowUpRight size={16} />
+              </Link>
+            </article>
+            <article className="lp-feature lp-feature-pipeline">
+              <div className="lp-feature-copy">
+                <div className="lp-feature-heading">
+                  <Columns3 size={22} />
+                  <span>PIPELINE COMERCIAL</span>
+                </div>
+                <h3>
+                  Transforme conversas
+                  <br />
+                  em oportunidades.
+                </h3>
+                <p>
+                  Qualifique, mova etapas e registre o próximo passo. Experimente o Kanban funcional
+                  na demonstração.
+                </p>
+                <Link to="/app/pipeline" className="lp-text-link">
+                  Explorar o pipeline <ArrowUpRight size={16} />
+                </Link>
+              </div>
+              <PipelinePreview compact />
+            </article>
+            <article className="lp-feature lp-small-feature">
+              <div className="lp-feature-heading">
+                <Bell size={21} />
+                <span>FOLLOW-UP</span>
+              </div>
+              <h3>Menos oportunidades esquecidas.</h3>
+              <div className="lp-alert-list">
+                {demoAlerts.map((a) => (
+                  <div key={a.id}>
+                    <span className="lp-status-dot" />
+                    <span>{a.detail}</span>
+                  </div>
+                ))}
+              </div>
+              <Link to="/app/followup" className="lp-text-link">
+                Ver acompanhamentos <ArrowUpRight size={16} />
+              </Link>
+            </article>
+            <article className="lp-feature lp-small-feature">
+              <div className="lp-feature-heading">
+                <FileText size={21} />
+                <span>PROPOSTAS</span>
+              </div>
+              <h3>Acompanhe até a decisão.</h3>
+              <div className="lp-proposal-list">
+                {presentation.proposals.slice(0, 2).map((p) => (
+                  <div key={p.id}>
+                    <span>
+                      {presentation.leads.find((l) => l.id === p.leadId)?.company}
+                      <small>{PROPOSAL_STATUS[p.status]}</small>
+                    </span>
+                    <strong>
+                      {p.value.toLocaleString("pt-BR", {
+                        style: "currency",
+                        currency: "BRL",
+                        maximumFractionDigits: 0,
+                      })}
+                    </strong>
+                  </div>
+                ))}
+              </div>
+              <Link to="/app/deals" className="lp-text-link">
+                Explorar propostas <ArrowUpRight size={16} />
+              </Link>
+            </article>
+            <article className="lp-feature lp-small-feature">
+              <div className="lp-feature-heading">
+                <Radar size={21} />
+                <span>VISÃO EXECUTIVA</span>
+              </div>
+              <h3>Dados que conversam entre si.</h3>
+              <div className="lp-analytics">
+                <strong>
+                  {presentation.leads.length}
+                  <small>leads fictícios</small>
+                </strong>
+                <span>
+                  <Check size={15} />
+                  Uma base para todos os módulos
+                </span>
+              </div>
+              <Link to="/app" className="lp-text-link">
+                Abrir dashboard <ArrowUpRight size={16} />
+              </Link>
             </article>
           </div>
+          <p className="lp-preview-note lp-bento-note">
+            Todas as prévias desta página usam dados fictícios do ambiente demonstrativo.
+          </p>
         </section>
-
-        <section id="como-funciona" className="border-y border-border bg-card/40 py-20">
-          <div className="mx-auto max-w-6xl px-4">
-            <h2 className="text-center font-display text-3xl font-bold md:text-4xl">
-              Como funciona
-            </h2>
-            <ol className="mt-12 grid gap-6 md:grid-cols-4">
+        <section id="como-funciona" className="lp-process-section">
+          <div className="lp-container">
+            <div className="lp-section-heading">
+              <div>
+                <p className="lp-eyebrow">03 — UM FLUXO, DO INÍCIO AO FIM</p>
+                <h2>
+                  Seu próximo passo,
+                  <br />
+                  sempre à vista.
+                </h2>
+              </div>
+              <p>
+                Da captura ao acompanhamento, cada etapa acrescenta contexto à mesma oportunidade.
+              </p>
+            </div>
+            <ol className="lp-process">
               {[
-                ["Capture", "Links rastreáveis, formulários e conversas chegam ao LeadTrace."],
-                ["Identifique", "A origem é atribuída com evidência e nível de confiança."],
-                ["Avance", "Qualifique, envie propostas e mova no pipeline."],
-                ["Acompanhe", "Alertas lembram cada retorno pendente."],
-              ].map(([t, d], i) => (
-                <li key={t} className="rounded-xl border border-border bg-background p-5">
-                  <span className="font-display text-3xl font-extrabold text-brand">0{i + 1}</span>
-                  <h3 className="mt-2 font-semibold">{t}</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">{d}</p>
+                [
+                  "Capture",
+                  "Um novo contato",
+                  "Cadastre manualmente ou prepare a captura por formulários e canais oficiais.",
+                ],
+                [
+                  "Identifique",
+                  "Uma origem verificável",
+                  "Registre UTMs, referrer ou informação declarada. Sem evidência, sem suposições.",
+                ],
+                [
+                  "Avance",
+                  "Uma oportunidade em movimento",
+                  "Qualifique o lead, organize a proposta e atualize a etapa no Kanban.",
+                ],
+                [
+                  "Acompanhe",
+                  "Uma próxima ação",
+                  "Defina datas e consulte os alertas calculados a partir do histórico.",
+                ],
+              ].map(([name, detail, copy], i) => (
+                <li key={name}>
+                  <span className="lp-step-number">0{i + 1}</span>
+                  <h3>{name}</h3>
+                  <strong>{detail}</strong>
+                  <p>{copy}</p>
                 </li>
               ))}
             </ol>
           </div>
         </section>
-
-        <section id="beneficios" className="mx-auto max-w-6xl px-4 py-20">
-          <h2 className="text-center font-display text-3xl font-bold md:text-4xl">
-            Benefícios comerciais
-          </h2>
-          <div className="mt-12 grid gap-4 md:grid-cols-3">
-            {[
-              [
-                Workflow,
-                "Saiba onde investir",
-                "Compare canais pelos leads e negócios fechados que realmente geram.",
-              ],
-              [
-                Bell,
-                "Nenhuma proposta esquecida",
-                "Follow-ups automáticos com base em dias sem retorno.",
-              ],
-              [
-                ShieldCheck,
-                "Governança e segurança",
-                "Arquitetura multiempresa, papéis de acesso e auditoria de alterações.",
-              ],
-              [
-                Smartphone,
-                "Em qualquer tela",
-                "Desktop, tablet e celular, instalável como aplicativo.",
-              ],
-            ].map(([I, t, d]) => {
-              const Icon = I as typeof Bell;
-              return (
-                <div key={t as string} className="flex gap-4 rounded-xl border border-border p-5">
-                  <Icon className="size-5 shrink-0 text-primary" />
-                  <div>
-                    <h3 className="font-semibold">{t as string}</h3>
-                    <p className="mt-1 text-sm text-muted-foreground">{d as string}</p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-
-        <section className="px-4 pb-20">
-          <div className="relative mx-auto max-w-4xl overflow-hidden rounded-3xl border border-border bg-card p-10 text-center shadow-elegant">
-            <div className="pointer-events-none absolute inset-0 bg-glow" />
-            <h2 className="relative font-display text-3xl font-bold">
-              Track every lead. Grow every opportunity.
+        <section id="beneficios" className="lp-section lp-container lp-benefits">
+          <div>
+            <p className="lp-eyebrow">04 — CLAREZA PARA O DIA A DIA</p>
+            <h2>
+              Seu comercial
+              <br />
+              organizado.
+              <br />
+              <em>Sem complicação.</em>
             </h2>
-            <p className="relative mt-2 text-muted-foreground">
-              Explore o ambiente demonstrativo com dados fictícios.
+            <p>
+              Mais contexto para atender.
+              <br />
+              Mais clareza para acompanhar.
             </p>
-            <Button variant="hero" size="lg" className="relative mt-6" asChild>
+            <Button variant="outline" asChild>
               <Link to="/app">
-                Explorar demonstração <ArrowRight />
+                Conheça na prática <ArrowUpRight />
               </Link>
             </Button>
           </div>
+          <div className="lp-benefit-list">
+            {[
+              [
+                "01",
+                "Menos oportunidades esquecidas.",
+                "Próximas atividades e retornos pendentes visíveis, sem depender da memória.",
+              ],
+              [
+                "02",
+                "Mais clareza sobre a origem dos contatos.",
+                "Fontes, campanhas e evidências reunidas para avaliar seus canais.",
+              ],
+              [
+                "03",
+                "Propostas acompanhadas até a decisão.",
+                "Valor, status e próxima data de acompanhamento ligados ao mesmo lead.",
+              ],
+            ].map(([number, title, copy]) => (
+              <article key={number}>
+                <span>{number}</span>
+                <div>
+                  <h3>{title}</h3>
+                  <p>{copy}</p>
+                </div>
+                <ArrowUpRight size={18} />
+              </article>
+            ))}
+            <div className="lp-assurances">
+              <span>
+                <ShieldCheck size={17} />
+                Papéis e auditoria preparados
+              </span>
+              <span>
+                <Smartphone size={17} />
+                Desktop, tablet e celular
+              </span>
+            </div>
+          </div>
+        </section>
+        <section className="lp-final lp-container">
+          <p className="lp-eyebrow">
+            <span className="lp-status-dot" />
+            LEADTRACE CRM · BY SEVENDEVX
+          </p>
+          <div>
+            <h2>
+              O próximo passo
+              <br />
+              começa com <em>clareza.</em>
+            </h2>
+            <div>
+              <Button variant="hero" size="lg" asChild>
+                <Link to="/app">
+                  Explorar demonstração <ArrowUpRight />
+                </Link>
+              </Button>
+              <p>
+                Explore com dados fictícios.
+                <br />
+                Nenhuma mensagem real será enviada.
+              </p>
+            </div>
+          </div>
+          <p className="lp-tagline">Track every lead. Grow every opportunity.</p>
         </section>
       </main>
-
-      <footer className="border-t border-border py-8">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 text-sm text-muted-foreground">
+      <footer className="lp-footer">
+        <div className="lp-container">
           <Logo />
           <p>
             LeadTrace CRM — by SevenDevX ·{" "}
-            <a
-              href="https://sevendevx.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary hover:underline"
-            >
+            <a href="https://sevendevx.com/" target="_blank" rel="noopener noreferrer">
               Desenvolvido por SevenDevX
             </a>
           </p>
+          <a href="#conteudo" aria-label="Voltar ao início">
+            ↑
+          </a>
         </div>
       </footer>
-    </div>
-  );
-}
-
-function Mockup() {
-  const demo = createSeed(Date.UTC(2026, 0, 1));
-  const totals = kpis(demo, demo.leads);
-  const bars = Object.entries(
-    demo.leads.reduce<Record<string, number>>((acc, lead) => {
-      acc[lead.source] = (acc[lead.source] ?? 0) + 1;
-      return acc;
-    }, {}),
-  )
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5)
-    .map(
-      ([key, count]) =>
-        [
-          SOURCES[key as SourceKey].label,
-          Math.round((count / demo.leads.length) * 100),
-          SOURCES[key as SourceKey].token,
-        ] as const,
-    );
-  return (
-    <div
-      className="relative mx-auto mt-14 max-w-5xl animate-float rounded-2xl border border-border bg-card p-3 text-left shadow-elegant"
-      aria-label="Prévia do dashboard LeadTrace"
-      role="img"
-    >
-      <p className="mb-3 text-xs text-muted-foreground">
-        Prévia com dados fictícios da demonstração
-      </p>
-      <div className="flex gap-3">
-        <div className="hidden w-40 space-y-1.5 rounded-xl bg-sidebar p-3 md:block">
-          {["Dashboard", "Inbox", "Pipeline", "Leads", "Origem", "Propostas", "Follow-up"].map(
-            (n, i) => (
-              <div
-                key={n}
-                className={`rounded px-2 py-1 text-xs ${i === 0 ? "bg-sidebar-accent text-foreground" : "text-muted-foreground"}`}
-              >
-                {n}
-              </div>
-            ),
-          )}
-        </div>
-        <div className="flex-1 space-y-3">
-          <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
-            {[
-              ["Leads", totals.total],
-              ["Qualificados", totals.qualificados],
-              ["Propostas", demo.proposals.length],
-              ["Fechados", totals.fechados],
-            ].map(([l, v]) => (
-              <div key={l} className="rounded-lg border border-border bg-background p-3">
-                <p className="text-[10px] text-muted-foreground">{l}</p>
-                <p className="font-display text-xl font-bold">{v}</p>
-              </div>
-            ))}
-          </div>
-          <div className="grid gap-2 md:grid-cols-2">
-            <div className="rounded-lg border border-border bg-background p-3">
-              <p className="mb-2 text-[11px] font-semibold">Leads por origem</p>
-              {bars.map(([l, w, t]) => (
-                <div key={l} className="mb-1.5 flex items-center gap-2 text-[10px]">
-                  <span className="w-16 text-muted-foreground">{l}</span>
-                  <span
-                    className="h-2 rounded-full origin-dot"
-                    style={{ width: `${w}%`, ["--c" as string]: `var(${t})` }}
-                  />
-                </div>
-              ))}
-            </div>
-            <div className="grid grid-cols-3 gap-2 rounded-lg border border-border bg-background p-3">
-              {["Novo", "Qualificado", "Proposta"].map((c, i) => (
-                <div key={c}>
-                  <p className="mb-1 text-[10px] text-muted-foreground">{c}</p>
-                  {Array.from({ length: 3 - i }).map((_, k) => (
-                    <div key={k} className="mb-1 h-8 rounded border border-border bg-card" />
-                  ))}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
