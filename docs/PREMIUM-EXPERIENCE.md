@@ -1,6 +1,6 @@
 # Refinamento visual da landing — v3
 
-A página inicial preserva rotas, logotipo, tokens, assinatura SevenDevX e metadados SEO. Não altera Auth, Supabase, variáveis de ambiente, regras comerciais ou PWA. O ambiente operacional continua desconectado, conforme a reversão anterior.
+A página inicial preserva rotas, logotipo, tokens, assinatura SevenDevX e metadados SEO. Não altera Auth, Supabase, variáveis de ambiente, regras comerciais ou PWA. O redesign não configura ou ativa serviços externos; mantém a integração existente na branch principal.
 
 ## Composição e componentes
 
@@ -19,4 +19,4 @@ Não foi medido um novo score Lighthouse ou Core Web Vitals em tráfego real. As
 
 ## Reprodutibilidade do CI
 
-O runner passou a fornecer npm 11.19.0, que rejeitou o lockfile existente ao resolver peers opcionais. Uma instalação limpa com o npm 11.9.0 já declarado em `packageManager` aceitou o mesmo lockfile (535 pacotes). O workflow fixa essa versão da ferramenta antes de `npm ci`; não adiciona dependências ao produto nem altera o lockfile.
+A branch principal recebeu da Lovable novas dependências (`drizzle-kit`, `drizzle-orm`, `postgres` e atualização da especificação do cliente Supabase) sem sincronizar `package-lock.json`. As mudanças existentes foram integradas sem reescrever histórico nem modificar a integração. O lockfile foi sincronizado com o manifesto atual; as etapas temporárias de diagnóstico foram removidas e o workflow original preservado. O redesign não adiciona biblioteca de UI ou animação.

@@ -14,15 +14,7 @@ jobs:
         with:
           node-version: 24
           cache: npm
-      # Match packageManager: newer bundled npm changes optional-peer lock resolution.
-      - run: npx --yes npm@11.9.0 --version
-      - run: npx --yes npm@11.9.0 install --package-lock-only --ignore-scripts --no-audit --no-fund
-      - uses: actions/upload-artifact@v4
-        with:
-          name: resolved-package-lock
-          path: package-lock.json
-      - run: git diff --exit-code -- package-lock.json
-      - run: npx --yes npm@11.9.0 ci --ignore-scripts
+      - run: npm ci --ignore-scripts
       - run: npm run db:isolated
       - run: git diff --exit-code -- supabase/isolated-schema.sql supabase/bootstrap-isolated.sql
       - run: npm test
