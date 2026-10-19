@@ -10,3 +10,11 @@ Em 18/10/2026, por solicitação do proprietário, a ativação do LeadTrace no 
 - Não havia leads reais nas tabelas removidas.
 
 O histórico de migrations permanece como registro da aplicação e reversão. O CRM demonstrativo permanece disponível. Um backend operacional requer projeto exclusivo e aprovação específica; não há provisionamento pago autorizado.
+
+## Ambiente exclusivo Lovable Cloud
+
+Na continuação autorizada pelo proprietário, foi criado um ambiente Lovable Cloud gerenciado exclusivo deste projeto. A inspeção confirmou que não há tabelas de aplicação em `public`; nenhuma migration do CRM ou dado demonstrativo foi aplicado nele. O projeto SevenDevX anterior não foi reutilizado.
+
+As variáveis de acesso geradas agora permitem que a plataforma encaminhe visitantes sem sessão ao login, mas isso **não comprova login operacional**: métodos de acesso, confirmação, callbacks, organização e permissões ainda precisam de configuração e validação real. Google e recuperação continuam bloqueados pelas flags de configuração até verificar os endereços de retorno.
+
+Validação da continuação: 48 testes passaram; no navegador, a edição de lead sobreviveu à atualização, a mudança de etapa apareceu em propostas, a mensagem simulada apareceu na Inbox e a navegação mobile manteve o tema claro sem transbordamento horizontal. Nenhum erro de execução foi observado nesses fluxos. Os metadados das páginas foram completados sem dados privados e a referência a uma imagem de compartilhamento inexistente foi removida.

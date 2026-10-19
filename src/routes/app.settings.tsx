@@ -6,8 +6,12 @@ import { OriginBadge } from "@/components/crm/OriginBadge";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { privateRouteMeta } from "@/lib/route-meta";
 
-export const Route = createFileRoute("/app/settings")({ component: Settings });
+export const Route = createFileRoute("/app/settings")({
+  head: () => privateRouteMeta("Configurações demonstrativas", "Preferências, alertas e estado das integrações no ambiente fictício do LeadTrace CRM."),
+  component: Settings,
+});
 
 const INTEGRATIONS = [
   {

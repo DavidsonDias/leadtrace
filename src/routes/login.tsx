@@ -7,11 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authConfigured, authError, getSupabase, googleConfigured } from "@/lib/backend/client";
+import { privateRouteMeta } from "@/lib/route-meta";
 export const Route = createFileRoute("/login")({
   validateSearch: z.object({ reason: z.enum(["expired", "denied"]).optional() }),
-  head: () => ({
-    meta: [{ title: "Entrar — LeadTrace CRM" }, { name: "robots", content: "noindex, nofollow" }],
-  }),
+  head: () => privateRouteMeta("Entrar", "Acesso à conta e à demonstração isolada do LeadTrace CRM, desenvolvido pela SevenDevX."),
   component: Login,
 });
 function Login() {

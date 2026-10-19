@@ -6,14 +6,10 @@ import { AuthLayout } from "@/components/brand/AuthLayout";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { privateRouteMeta } from "@/lib/route-meta";
 export const Route = createFileRoute("/reset-password")({
   ssr: false,
-  head: () => ({
-    meta: [
-      { title: "Redefinir senha — LeadTrace CRM" },
-      { name: "robots", content: "noindex, nofollow" },
-    ],
-  }),
+  head: () => privateRouteMeta("Redefinir senha", "Redefinição segura da senha de acesso ao LeadTrace CRM."),
   component: Reset,
 });
 function Reset() {
