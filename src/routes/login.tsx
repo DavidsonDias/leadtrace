@@ -11,6 +11,7 @@ import { privateRouteMeta } from "@/lib/route-meta";
 import { useAuth } from "@/lib/backend/auth-context";
 import { lovable } from "@/integrations/lovable";
 import "@lovable.dev/cloud-auth-js/styles.css";
+import { AccountProfile } from "@/components/brand/AccountProfile";
 export const Route = createFileRoute("/login")({
   validateSearch: z.object({ reason: z.enum(["expired", "denied"]).optional() }),
   head: () => privateRouteMeta("Entrar", "Acesso à conta e à demonstração isolada do LeadTrace CRM, desenvolvido pela SevenDevX."),
@@ -21,14 +22,19 @@ function Login() {
   const navigate = useNavigate();
   const auth = useAuth();
   const [message, setMessage] = useState<string | null>(null),
-    [busy, setBusy] = useState(false);
+    [busy, setBusy] = useState(false),
+    [signup, setSignup] = useState(false);
   return (
     <AuthLayout>
       <h1 className="font-display text-2xl font-bold">Acessar plataforma</h1>
       <p className="mt-1 text-sm text-muted-foreground">Entre com sua conta LeadTrace.</p>
       {auth.user && (
-        <Button asChild className="mt-4 w-full"><Link to="/workspace">Abrir minha organização</Link></Button>
+        <>
+          <Button asChild className="mt-4 w-full"><Link to="/workspace">Abrir minha organização</Link></Button>
+          <AccountProfile userId={auth.user.id} />
+        </>
       )}
+      {!auth.user && <>
       {reason && (
         <p role="status" className="mt-4 rounded-md border border-warning p-3 text-sm">
           {reason === "expired"
@@ -99,6 +105,19 @@ function Login() {
           setBusy(true);
           const form = new FormData(event.currentTarget);
           try {
+            if (signup) {
+              const { error } = await getSupabase().auth.signUp({
+                email: String(form.get("email")).trim(),
+                password: String(form.get("password")),
+                options: {
+                  emailRedirectTo: window.location.origin,
+                  data: { display_name: String(form.get("display_name")).trim() },
+                },
+              });
+              if (error) throw error;
+              setMessage("Confira seu e-mail para confirmar a conta. O acesso à organização depende de convite do administrador.");
+              return;
+            }
             const { error } = await getSupabase().auth.signInWithPassword({
               email: String(form.get("email")).trim(),
               password: String(form.get("password")),
@@ -112,6 +131,10 @@ function Login() {
           }
         }}
       >
+        {signup && <div>
+          <Label htmlFor="signup-name">Seu nome</Label>
+          <Input id="signup-name" name="display_name" autoComplete="name" minLength={2} maxLength={100} required disabled={busy || !authConfigured} />
+        </div>}
         <div>
           <Label htmlFor="email">E-mail</Label>
           <Input
@@ -136,13 +159,18 @@ function Login() {
             type="password"
             required
             autoComplete="current-password"
+            minLength={signup ? 12 : undefined}
             disabled={busy || !authConfigured}
           />
         </div>
         <Button type="submit" disabled={busy || !authConfigured} className="w-full">
-          {busy ? "Entrando…" : "Entrar"}
+          {busy ? "Aguarde…" : signup ? "Criar conta" : "Entrar"}
         </Button>
       </form>
+      <Button variant="link" className="mt-2 w-full" disabled={busy} onClick={() => { setSignup(!signup); setMessage(null); }}>
+        {signup ? "Já tenho uma conta" : "Criar minha conta"}
+      </Button>
+      </>}
       {message && (
         <p
           role="alert"
