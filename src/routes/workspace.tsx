@@ -8,6 +8,7 @@ import { LeadSheet } from "@/components/crm/LeadSheet";
 import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
 import { privateRouteMeta } from "@/lib/route-meta";
+import { useQueryClient } from "@tanstack/react-query";
 export const Route = createFileRoute("/workspace")({
   ssr: false,
   head: () => privateRouteMeta("Plataforma", "Ambiente de trabalho da organização no LeadTrace CRM."),
@@ -24,6 +25,7 @@ const modules = [
   ["settings", "Configurações"],
 ];
 function Workspace() {
+  const queryClient = useQueryClient();
   const auth = useAuth(),
     nav = useNavigate();
   const userId = auth.user?.id;
@@ -113,8 +115,10 @@ function Workspace() {
             size="sm"
             variant="outline"
             onClick={async () => {
+               await queryClient.cancelQueries();
+               queryClient.clear();
               await getSupabase().auth.signOut();
-              window.location.assign("/login");
+               await nav({ to: "/login", replace: true });
             }}
           >
             Sair
@@ -142,7 +146,7 @@ function Workspace() {
               <Link
                 key={module}
                 to="/workspace/$module"
-                params={{ module: module! }}
+                params={{ module: module ?? "dashboard" }}
                 search={{ lead: undefined }}
                 className="shrink-0 rounded-md px-3 py-2 text-sm hover:bg-accent"
                 activeProps={{ className: "bg-accent text-primary" }}

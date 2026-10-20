@@ -8,6 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authConfigured, authError, getSupabase, googleConfigured } from "@/lib/backend/client";
 import { privateRouteMeta } from "@/lib/route-meta";
+import { useAuth } from "@/lib/backend/auth-context";
+import { lovable } from "@/integrations/lovable";
+import "@lovable.dev/cloud-auth-js/styles.css";
 export const Route = createFileRoute("/login")({
   validateSearch: z.object({ reason: z.enum(["expired", "denied"]).optional() }),
   head: () => privateRouteMeta("Entrar", "Acesso à conta e à demonstração isolada do LeadTrace CRM, desenvolvido pela SevenDevX."),
@@ -16,12 +19,16 @@ export const Route = createFileRoute("/login")({
 function Login() {
   const { reason } = Route.useSearch();
   const navigate = useNavigate();
+  const auth = useAuth();
   const [message, setMessage] = useState<string | null>(null),
     [busy, setBusy] = useState(false);
   return (
     <AuthLayout>
       <h1 className="font-display text-2xl font-bold">Acessar plataforma</h1>
       <p className="mt-1 text-sm text-muted-foreground">Entre com sua conta LeadTrace.</p>
+      {auth.user && (
+        <Button asChild className="mt-4 w-full"><Link to="/workspace">Abrir minha organização</Link></Button>
+      )}
       {reason && (
         <p role="status" className="mt-4 rounded-md border border-warning p-3 text-sm">
           {reason === "expired"
@@ -42,11 +49,11 @@ function Login() {
         onClick={async () => {
           setBusy(true);
           try {
-            const { error } = await getSupabase().auth.signInWithOAuth({
-              provider: "google",
-              options: { redirectTo: `${window.location.origin}/auth/callback` },
+            const result = await lovable.auth.signInWithOAuth("google", {
+              redirect_uri: `${window.location.origin}/auth/callback`,
             });
-            if (error) throw error;
+            if (result.error) throw result.error;
+            if (!result.redirected) await navigate({ to: "/workspace" });
           } catch (error) {
             setMessage(authError(error));
             setBusy(false);
@@ -60,6 +67,28 @@ function Login() {
           Google OAuth não configurado.
         </p>
       )}
+      <Button
+        variant="outline"
+        className="lovable-auth-button mt-3 w-full"
+        disabled={busy || !authConfigured || !googleConfigured}
+        onClick={async () => {
+          setBusy(true);
+          setMessage(null);
+          try {
+            const result = await lovable.auth.signInWithOAuth("lovable", {
+              redirect_uri: `${window.location.origin}/auth/callback`,
+            });
+            if (result.error) throw result.error;
+            if (!result.redirected) await navigate({ to: "/workspace" });
+          } catch (error) {
+            setMessage(authError(error));
+          } finally {
+            setBusy(false);
+          }
+        }}
+      >
+        Sign in with Lovable
+      </Button>
       <div className="my-5 text-center text-xs text-muted-foreground">ou entre com e-mail</div>
       <form
         className="space-y-3"
