@@ -23,3 +23,5 @@
 - npm/package-lock.json is the canonical package manager/lock for local work, CI, and Vercel.
 
 - Production is disconnected pending a dedicated backend; Google and recovery require `VITE_AUTH_REDIRECTS_CONFIGURED=true` only after callback allowlisting is verified. Do not modify other apps' Site URL or mail templates.
+- Application auth and repository calls share the generated Cloud client through the backend adapter, so managed social login and email login always use the same session storage and token attachment.
+- Cloud profile creation is an auth lifecycle trigger with owner-only profile policies; it never grants roles or organization membership, so registering cannot elevate access.

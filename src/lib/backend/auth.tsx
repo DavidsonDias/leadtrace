@@ -2,7 +2,11 @@ import { AuthContext } from "./auth-context";
 import { useEffect, useState, type ReactNode } from "react";
 import type { User } from "@supabase/supabase-js";
 import { authConfigured, getSupabase } from "./client";
+import { useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "@tanstack/react-router";
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const queryClient = useQueryClient();
+  const router = useRouter();
   const [state, setState] = useState<{ user: User | null; loading: boolean; error: boolean }>({
     user: null,
     loading: true,
@@ -30,16 +34,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .catch(() => {
           if (alive) setState({ user: null, loading: false, error: true });
         });
-    void verify();
-    const { data } = client.auth.onAuthStateChange(() => {
+    const { data } = client.auth.onAuthStateChange((event) => {
+      if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED" && event !== "PASSWORD_RECOVERY") return;
       window.setTimeout(() => {
-        if (alive) void verify();
+        if (!alive) return;
+        if (event === "SIGNED_OUT") {
+          setState({ user: null, loading: false, error: false });
+          queryClient.clear();
+        } else {
+          void verify();
+          void queryClient.invalidateQueries();
+        }
+        void router.invalidate();
       }, 0);
     });
+    void verify();
     return () => {
       alive = false;
       data.subscription.unsubscribe();
     };
-  }, []);
+  }, [queryClient, router]);
   return <AuthContext.Provider value={state}>{children}</AuthContext.Provider>;
 }
