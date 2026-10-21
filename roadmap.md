@@ -6,8 +6,9 @@
 - [x] Validar 48 testes e os fluxos de leads, pipeline, propostas, Inbox e navegação mobile no navegador.
 - [x] Registrar estado e verificações em docs/ACTIVATION.md.
 - [x] Habilitar contas por e-mail, preparar acesso social e criar perfis automaticamente com políticas individuais e testes reais de SQL.
-- [ ] Validar cadastro, perfil e saída no navegador com conta de teste.
+- [ ] Validar cadastro confirmado, perfil e saída — bloqueado pela ausência de conta confirmada; o formulário foi verificado e não há usuários para gerar sessão.
 - [ ] Ativar organização e persistência comercial — aplicar o esquema completo compatível com os perfis já criados; não importar dados da demo.
 - [ ] Integrar WhatsApp — depende da conexão Business, telefone e configuração Meta do proprietário.
 - [ ] Integrar captura no site — depende de autorização e acesso ao site do cliente.
+- [ ] Verificar endereços de retorno para Google, Lovable e recuperação; habilitar os botões somente após confirmação.
 - [ ] Validar acessos reais e publicar — depende da configuração de contas e solicitação explícita de publicação.
