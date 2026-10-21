@@ -93,7 +93,7 @@ function Login() {
           }
         }}
       >
-        Sign in with Lovable
+        Continue with Lovable
       </Button>
       <div className="my-5 text-center text-xs text-muted-foreground">ou entre com e-mail</div>
       <form
@@ -158,7 +158,7 @@ function Login() {
             name="password"
             type="password"
             required
-            autoComplete="current-password"
+            autoComplete={signup ? "new-password" : "current-password"}
             minLength={signup ? 12 : undefined}
             disabled={busy || !authConfigured}
           />
